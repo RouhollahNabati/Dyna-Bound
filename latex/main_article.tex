@@ -1,0 +1,738 @@
+% DynaCol-GNN manuscript for The Journal of Supercomputing
+% Build: bash build.sh
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{times}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{natbib}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{placeins}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=blue,urlcolor=blue}
+\graphicspath{{figures/}}
+\setstretch{1.05}
+\captionsetup{font=small,labelfont=bf}
+
+\title{Colony-Bounded Hybrid Learning for Cold-Start Fog Service Placement}
+
+\author{
+Rouhollah Nabati$^{1}$\thanks{Corresponding author: Rouhollah Nabati.}\\
+Abdulbaghi Ghaderzadeh$^{1}$\\[0.6em]
+\small $^{1}$Department of Computer Engineering, Faculty of Engineering,\\
+\small Islamic Azad University, Sanandaj Branch, Sanandaj, Iran
+}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+%% --- Springer Nature sn-jnl swap (when cls is available) ---
+%% \documentclass[pdflatex,sn-mathphys-ay]{sn-jnl}
+%% \begin{abstract}...\end{abstract}
+%% Required declarations (also kept below for article-class builds):
+%% \bmhead{Acknowledgements} ...
+%% Competing interests / Funding / Data availability / Author contributions
+
+\begin{abstract}
+Fog service placement under burst load and membership churn is hard when the
+control plane itself must form from scratch. Most learning placers either assume
+an already organized hierarchy or score hosts over a near-global action set, so
+control cost and cold-start behavior are rarely isolated. We present
+\textbf{DynaCol-GNN}, a colony-bounded hybrid placer that keeps DynaCol's
+cold-start formation, FCM handover, CRT/GRT tables, sticky L1 reuse, and cloud
+L3 fallback, and changes only L2 host ranking. Candidates stay inside the pruned
+CRT (with optional GRT escalation). Online GraphSAGE or flat-vector scorers mix
+with the deterministic DCBO objective through a scale-aware blend that returns
+to exact DCBO when the fog count is large. In iFogSim2, a 20-trial multipipe
+journal grid shows both hybrids reduce mean SLA versus DCBO at matched overhead
+on normal, burst, and churn loads, with Holm-significant paired gaps and
+bootstrap CIs that exclude zero. Encoder ranking between GraphSAGE and the
+vector ablation is mixed and non-significant. A same-plane tabular
+$\varepsilon$-greedy learner is a strong SLA control inside the colony plane;
+flat baselines (FogPlan, Greedy-Nearest, Static-DCBO) give absolute SLA context
+outside that plane. At $N{=}1000$ the methods stay close with matched overhead.
+\end{abstract}
+
+\noindent\textbf{Keywords:}
+fog computing, service placement, graph neural networks, hybrid learning,
+self-organizing systems, cold start, CRT/GRT, iFogSim2
+
+\section{Introduction}
+\label{sec:intro}
+
+Service placement at the fog and edge must keep end-to-end delay inside SLA
+limits while demand, membership, and link quality move
+\cite{chiang_jiot2016,yousefpour_sysarc2019}.
+When load bursts and nodes leave, placers that need a global snapshot, or that
+assume a ready hierarchy, either spend too much on control or fail early in the
+run \cite{salaht_csur2020,taleb_csur2025_survey}.
+Reinforcement learning and related adapters help under changing demand
+\cite{supraja_cluster2025_slr,schulman_ppo2017}, yet many designs still open the
+action set to almost every host and rarely report the messaging cost of that
+choice \cite{hong_csur2019_resource}.
+
+DynaCol already covers the control-plane side: colonies form from a zero-colony
+state, an FCM is elected and handed over, and CRT/GRT tables stay bounded. DCBO
+is the default L2 scorer, with sticky L1 reuse and cloud L3 fallback. Missing is
+a learner that is \emph{forced} to pick inside those same bounded views.
+
+We leave formation, handover, CRT/GRT, L1, and L3 as in DynaCol and replace only
+L2 ranking. At each decision a GraphSAGE network scores at most the top-$K$ CRT
+hosts (RTT affinity plus service-DAG context), mixes that score with inverted
+DCBO utility, and reduces the learning blend to zero once the fabric is large
+enough that exact DCBO is preferred (Fig.~\ref{fig:arch}). The vector policy is
+the same MDP without message passing (Fig.~\ref{fig:encoders}).
+
+The MDP is colony-bounded ($|A_t|\le K$ after cold start), so the control
+plane is part of the learning method. L2 hybrids online scoring with DCBO and
+hands back to exact DCBO at large $N$. We compare a HID$=$16 GraphSAGE encoder
+(offline import plus fine-tune) with a flat vector ablation and a same-plane
+tabular $\varepsilon$-greedy learner on iFogSim2 under normal/burst/churn,
+including a 20-trial journal grid with Holm tests, bootstrap CIs, and Cohen's
+$d$, an $N{=}1000$ check, one-factor sensitivity, and named flat baselines for
+absolute context.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+\item \textbf{C1 --- Colony-bounded MDP.} Formal state/action/reward with
+$|A_t|\le K_{\mathrm{crt}}$ after cold start.
+\item \textbf{C2 --- Hybrid L2 stack.} Online scoring hybridized with DCBO plus
+scale-aware blend and exact large-scale DCBO delegation.
+\item \textbf{C3 --- Encoders and same-plane learner.} GraphSAGE with offline
+import and fine-tune; vector ablation; tabular DRL control on the same CRT plane.
+\item \textbf{C4 --- Empirical study.} Locked multipipe journal $n{=}20$ with
+Holm/CI/effect sizes, sensitivity, $N{=}1000$ parity, and Pareto SLA--overhead
+context against flat baselines.
+\end{enumerate}
+
+\section{Related Work}
+\label{sec:rw}
+
+\subsection{Fog and edge service placement}
+Surveys of fog placement cover latency, energy, and cost under fixed or
+centralized controllers
+\cite{salaht_csur2020,smolka_computing2022_eval,taleb_csur2025_survey,apat_computers2025_survey,chiang_jiot2016,yousefpour_sysarc2019}.
+Heuristic and metaheuristic assigners, FogTorch-style QoS matching, and FogPlan
+Min-Cost assignment improve mapping quality on a given topology
+\cite{skarlat_icfec2017,azimzadeh_cluster2022_genetic,benamer_cluster2024_ga,brogi_jiot2017_fogtorch,yousefpour_fogplan_jiot2019},
+but they do not form a self-organizing overlay from an empty colony state.
+
+\subsection{Learning-based offloading and placement}
+DQN/PPO-style and other learning placers adapt online
+\cite{mnih_nature2015_dqn,schulman_ppo2017,supraja_cluster2025_slr},
+with applications in healthcare/fog stacks, energy-aware modules, and multi-tier
+containers
+\cite{tuli_iotj2020_dynamic,hossam_cluster2024_energy,dogani_cluster2024_twotier}.
+Resource-management surveys still note large action spaces and the assumption
+of an organized fabric
+\cite{hong_csur2019_resource,costa_csur2022,pallewatta_csur2023_microservices}.
+DynaCol-GNN keeps the action set inside CRT/GRT top-$K$ and mixes learning with
+DCBO so cold start stays stable.
+
+\subsection{Self-organizing and hierarchical fog control}
+Overlay formation and manager election (including DynaCol) separate structure
+from placement. Hierarchical module managers and evolutionary mappers improve
+QoS once a hierarchy exists
+\cite{mahmud_fog_application2018,guerrero_fgcs2019_evolutionary},
+but learning is seldom constrained to the colony view as a hard limit. Here
+formation stays with DynaCol; learning only re-ranks inside that view.
+
+\subsection{Graph learning on infrastructure and service graphs}
+GraphSAGE and GNN-RL placers encode dependency graphs for scheduling and
+multi-objective mapping \cite{hamilton_graphsage2017,lera_jsup2024_gnn}.
+CRT neighborhoods are small and RTT-structured, so local message passing fits,
+provided the action set stays colony-bounded. On our multipipe champion lock the
+GNN beats the vector ablation; we do not claim a large gap on every grid.
+
+\subsection{Relation to DynaCol}
+DynaCol/DCBO is the prior control plane and baseline
+\cite{nabati_dynacol_cluster2026}. We do not restate cold-start formation or
+FCM handover as new results; while that manuscript is under review, the reused
+algorithms are reprinted in Appendix~\ref{app:dynacol} for self-containment.
+The deltas here are the colony-bounded L2 MDP, the hybrid GraphSAGE/vector
+learners with scale-aware blend, a same-plane tabular learner baseline, and the
+multipipe / journal / baseline study.
+
+\begin{table}[t]
+\centering
+\caption{Where DynaCol-GNN sits relative to common placement families.}
+\label{tab:positioning}
+\scriptsize
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Method family & Cold-start & Bounded view & Hybrid w/ determ.\ obj. & Local graph/DAG \\
+\midrule
+Classical / GA / ILP & Rarely & No & Sometimes & Rarely \\
+FogPlan / Edgeward / Static-DCBO & No/partial & No/fixed & No & No \\
+DRL placers (DQN/PPO) & Rarely & Rarely & Rarely & Sometimes \\
+GNN-RL placers & Rarely & Rarely & Rarely & Yes \\
+DynaCol / DCBO & Yes & Yes & N/A & No \\
+\textbf{DynaCol-GNN} & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+We use iFogSim / iFogSim2 for simulation
+\cite{gupta_ifogsim2017,mahmud_ifogsim2_jss2022}
+(EdgeCloudSim is a related alternative \cite{sonmez_edgecloudsim2018})
+and Holm's procedure for multiple comparisons \cite{holm_1979}.
+
+\section{Background: DynaCol Control Plane}
+\label{sec:bg}
+
+Only the reused pieces are summarized here
+\cite{nabati_dynacol_cluster2026}; pseudocode appears in
+Appendix~\ref{app:dynacol}.
+
+Nodes join by query/advertise until colonies appear. An FCM is elected by
+potency and updated with $\varepsilon$-greedy probes and a cooldown on handover.
+Each FCM keeps a CRT of member capacity, availability, RTT, and attractiveness
+(default top-$K_{\mathrm{crt}}{=}5$); GRT summaries allow limited cross-colony
+search (default top-$K_{\mathrm{grt}}{=}3$) without a full host list.
+Placement is three-tier: sticky L1 reuse if the current host still meets SLA
+thresholds; DCBO L2 scoring over CRT then GRT; cloud L3 if both fail.
+DynaCol-GNN replaces only the L2 ranking inside CRT/GRT top-$K$
+(Fig.~\ref{fig:arch}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{fig01_architecture.pdf}
+\caption{Placement stack on the reused DynaCol control plane: L1 sticky reuse,
+L2 DynaCol-GNN over CRT/GRT, L3 cloud fallback.}
+\label{fig:arch}
+\end{figure}
+
+\section{Colony-Bounded Hybrid Learning}
+\label{sec:method}
+
+\subsection{MDP}
+On each FCM reconcile, state $S_t$ is the local CRT (size $\le K_{\mathrm{crt}}$),
+optional GRT summaries, and service/DAG features. Action $A_t$ picks a feasible
+CRT host or escalates to GRT/L3. The hard limit $|A_t|\le K_{\mathrm{crt}}$ is
+intentional: the control plane is part of the learning method.
+
+Host features (dimension 8) are normalized CPU, RAM, storage, bandwidth, RTT to
+FCM, attractiveness, a neighbor-message channel, and producer-host affinity.
+Context (dimension 8) concatenates service/DAG scalars, producer-RTT pull,
+fan-in, and a co-location indicator. The vector ablation zeros the co-location
+channel so message passing and structure-weighted context are the main encoder
+differences.
+
+\paragraph{Reward.}
+Let $r_{\mathrm{attr}}$ be the attractiveness reward used by DCBO and
+$r_{\mathrm{dcbo}}$ the same signal at the DCBO-preferred CRT host. The shaped
+online target is
+\begin{equation}
+R_t=\mathrm{clip}_{[0,1]}\bigl(0.5+0.5(r_{\mathrm{attr}}-r_{\mathrm{dcbo}})\bigr).
+\end{equation}
+For GNN, a graph-SLA score (producer-RTT pull, co-location under fan-in) further
+biases the contrastive update. Vector uses the same $R_t$ with a weak linear
+TD-style update on the chosen feature vector.
+
+\subsection{Hybrid scoring}
+\begin{equation}
+s(i)=u_{\mathrm{DCBO}}(i)+\beta\cdot f_\theta\bigl(\phi(i)\bigr),
+\label{eq:hybrid}
+\end{equation}
+with $u_{\mathrm{DCBO}}$ the inverted DCBO objective. We take $\arg\max_i s(i)$
+and allow a small $\varepsilon$-greedy rate while $n_f$ is below the large-scale
+gate. The blend $\beta$ falls with fog count (default $0.60$ on multipipe at
+small $N$) and is set to zero for $n_f\ge 450$, so L2 becomes exact DCBO.
+
+\subsection{Encoders}
+The vector policy (\texttt{colony\_rl}) concatenates host channels with
+service/DAG scalars and scores with a linear head (learning rate $0.05$). The
+GNN policy (\texttt{colony\_gnn}) builds an RTT-affinity graph on CRT candidates
+with $A_{ij}\propto 1/(1+\mathrm{RTT}_{ij}/20)$ and a two-layer GraphSAGE-style
+update (hidden width $16$)
+\begin{equation}
+h'=\tanh\bigl(W_{\mathrm{self}}h+W_{\mathrm{neigh}}Ah\bigr),
+\end{equation}
+then reads out from $\mathrm{concat}(h,\mathrm{context})$ (learning rate
+$0.04$). Offline JSON weights can be loaded and fine-tuned online
+(Fig.~\ref{fig:encoders}).
+
+A same-plane tabular baseline (\texttt{drl}) keeps cold-start CRT/GRT formation
+but replaces L2 with $\varepsilon$-greedy selection on attractiveness
+($\varepsilon{=}0.15$), without a neural encoder or DCBO hybridization. It is
+not a deep Q-network; we report it as a lightweight learning control inside the
+colony plane.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{fig02_encoders.pdf}
+\caption{Vector ablation and GraphSAGE pipelines into the same hybrid score
+\eqref{eq:hybrid}.}
+\label{fig:encoders}
+\end{figure}
+
+\subsection{Online updates and offline import}
+After $i^\star$ is chosen, GNN applies a centered advantage update
+$R_t-\bar R$ with a soft contrastive push toward the graph-SLA-best CRT index
+when available; Vector applies a delta rule on the chosen features toward
+$R_t$. Attractiveness decay/update mirrors DCBO.
+
+\paragraph{Offline path.}
+Exploratory \texttt{colony\_gnn} runs log CRT tensors (host matrix, context,
+adjacency, action, reward, optional DCBO base scores). Outside the simulator we
+train a GIN-style encoder matching the Java layout with
+\textbf{reward-advantage behavioral cloning plus structure ranking} (not classic
+PPO): weighted NLL on the logged action, softplus ranking between
+structure-best/worst hosts, an optional ranking term against the inverted DCBO
+base vector, and a small entropy bonus. Exported JSON tensors load into the
+online GNN; champion and journal grids enable online fine-tuning.
+
+\subsection{Cost and algorithm}
+Scoring touches at most $K_{\mathrm{crt}}$ candidates at fixed feature/hidden
+width---$O(K_{\mathrm{crt}})$ per decision with no global host enumeration.
+Messaging remains the CRT/GRT traffic of DynaCol.
+
+\begin{algorithm}[t]
+\caption{Colony-bounded hybrid reconcile (sketch)}
+\label{alg:reconcile}
+\begin{algorithmic}[1]
+\Procedure{Reconcile}{$r$, fcm, current}
+  \If{$\beta\approx 0$}
+    \State \Return DCBO.reconcile($\ldots$)
+  \EndIf
+  \If{L1 sticky OK}
+    \State \Return current
+  \EndIf
+  \If{CRT enabled}
+    \State $C\leftarrow$ top-$K$ feasible CRT entries
+    \State pick $i^\star$ by hybrid score on $\phi(C)$; update $\theta$
+    \State \Return host($i^\star$)
+  \EndIf
+  \If{GRT enabled}
+    \State escalate via ranked GRT summaries
+  \EndIf
+  \State \Return cloud \Comment{L3}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\section{Experimental Setup}
+\label{sec:setup}
+
+Simulations run in iFogSim2 on the shared DynaCol runtime
+\cite{gupta_ifogsim2017,mahmud_ifogsim2_jss2022}.
+We compare \texttt{dcbo}, \texttt{colony\_rl} (Vector),
+\texttt{colony\_gnn} (GNN), and same-plane tabular \texttt{drl}, plus flat
+\texttt{static\_dcbo}, \texttt{fogplan}, and \texttt{greedy}. Edgeward was
+dropped on multipipe after single trials exceeded 25 minutes.
+
+Target sizes are $N\in\{100,300,500,1000\}$ under normal, burst, and churn.
+The surveillance DAG is the shallow camera pipeline; the multipipe DAG adds
+fan-out, skip, and join edges (Fig.~\ref{fig:dag}) with SLA deadline scale $10$.
+We report SLA violation \%, P95 loop delay, normalized control overhead, and
+colony count. The tuning lock uses 5 trials; the journal $N{=}100$ grid uses
+\textbf{20} trials with paired $t$, Holm adjustment, bootstrap CIs, and Cohen's
+$d$ \cite{holm_1979}; $N{=}1000$ uses 10 trials; flat baselines use 5 trials.
+One-factor sensitivity sweeps ($\beta$, deadline scale, $\varepsilon$) use 5
+Burst trials. Locked settings: HID$=$16, $\beta{=}0.60$, $\varepsilon{=}0.02$,
+offline weights with fine-tune.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\linewidth]{fig03_multipipe_dag.pdf}
+\caption{Multipipe application DAG used in the champion and journal grids.}
+\label{fig:dag}
+\end{figure}
+\FloatBarrier
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Journal multipipe grid ($n{=}20$)}
+Table~\ref{tab:journal} and Fig.~\ref{fig:j10} are the primary multipipe
+result. Both hybrids beat DCBO on every load at matched overhead
+($\approx$1770 normalized messages; $\approx$7.65 colonies). Paired bootstrap
+95\% CIs for GNN$-$DCBO and Vector$-$DCBO exclude zero on all three scenarios;
+Holm-adjusted tests clear $\alpha{=}0.05$ (Fig.~\ref{fig:holm}). GNN vs Vector
+is mixed and non-significant (CIs cover zero). Same-plane tabular DRL posts the
+lowest SLA means with slightly lower overhead ($\approx$1501) at the same
+colony count---a strong learning control inside the cold-start plane, not a
+matched-overhead peer of the hybrids.
+
+\begin{table}[htbp]
+\centering
+\caption{Multipipe journal grid: mean SLA \% (20 trials, $N{=}100$).}
+\label{tab:journal}
+\small
+\begin{tabular}{@{}rlllll@{}}
+\toprule
+$N$ & Scenario & GNN & Vector & DCBO & Tabular-DRL \\
+\midrule
+100 & Normal & \textbf{10.56} & 10.79 & 11.50 & 7.75 \\
+100 & Burst & 25.26 & \textbf{25.19} & 26.56 & 22.47 \\
+100 & Churn & 22.28 & \textbf{22.04} & 23.19 & 19.28 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\linewidth]{fig06_sla_journal10.pdf}
+\caption{Multipipe journal-grid SLA at $N{=}100$ (20 trials).}
+\label{fig:j10}
+\end{figure}
+\FloatBarrier
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\linewidth]{fig11_holm.pdf}
+\caption{Holm-adjusted $p$-values for paired SLA tests at $N{=}100$ (20 trials).}
+\label{fig:holm}
+\end{figure}
+\FloatBarrier
+
+\subsection{Tuning lock and offline path}
+The 5-trial multipipe lock (Table~\ref{tab:champ}, Fig.~\ref{fig:champ}) fixed
+offline weights and hyperparameters before the journal grid; we treat it as a
+tuning lock, not the primary statistical claim. Without imported weights, an
+earlier online-only medium put Vector slightly ahead of GNN while both beat
+DCBO (Table~\ref{tab:online}), so the offline structure-weighted path is part
+of the named GraphSAGE pipeline rather than a free online GNN-over-Vector gap.
+
+\begin{table}[htbp]
+\centering
+\caption{Multipipe tuning lock: mean SLA \% (5 trials, $N{=}100$).}
+\label{tab:champ}
+\small
+\begin{tabular}{@{}rllll@{}}
+\toprule
+$N$ & Scenario & GNN & Vector & DCBO \\
+\midrule
+100 & Normal & \textbf{10.64} & 10.98 & 11.48 \\
+100 & Burst & \textbf{24.89} & 25.35 & 26.13 \\
+100 & Churn & \textbf{22.31} & 22.43 & 23.21 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\linewidth]{fig05_sla_champion.pdf}
+\caption{Multipipe tuning-lock SLA at $N{=}100$ (5 trials).}
+\label{fig:champ}
+\end{figure}
+\FloatBarrier
+
+\begin{table}[htbp]
+\centering
+\caption{Earlier online-only multipipe medium (context; pre-lock).}
+\label{tab:online}
+\small
+\begin{tabular}{@{}rllll@{}}
+\toprule
+$N$ & Scenario & Online-GNN & Vector & DCBO \\
+\midrule
+100 & Normal & 10.34 & \textbf{10.25} & 11.21 \\
+100 & Burst & 24.39 & \textbf{24.09} & 26.42 \\
+100 & Churn & 21.15 & \textbf{21.13} & 23.04 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Surveillance DAG}
+Table~\ref{tab:surv} and Fig.~\ref{fig:surv} summarize the surveillance grid.
+At $N{=}100$ the hybrid (Vector and GNN coincide on this shallow app) lowers
+mean SLA against DCBO at matched overhead. At $N\in\{300,500\}$ the curves meet
+because the blend gate hands ranking back to DCBO (Fig.~\ref{fig:scale}).
+
+\begin{table}[htbp]
+\centering
+\caption{Surveillance DAG: mean SLA violation \% (5 trials).}
+\label{tab:surv}
+\small
+\begin{tabular}{@{}rlll@{}}
+\toprule
+$N$ & Scenario & Hybrid & DCBO \\
+\midrule
+100 & Normal & \textbf{11.51} & 13.31 \\
+100 & Burst & \textbf{14.02} & 14.78 \\
+100 & Churn & \textbf{14.58} & 15.37 \\
+300 & all & $\approx$0.48--0.51 & $\approx$0.48--0.50 \\
+500 & all & $\approx$0.57--0.59 & $\approx$0.57--0.59 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\linewidth]{fig04_sla_surveillance.pdf}
+\caption{Surveillance SLA at $N{=}100$ (mean $\pm$ std, 5 trials).}
+\label{fig:surv}
+\end{figure}
+\FloatBarrier
+
+\subsection{Scale, overhead, and sensitivity}
+Fig.~\ref{fig:scale} shows surveillance mean SLA versus target size.
+Fig.~\ref{fig:oh} shows matched overhead for colony-plane hybrids and DCBO.
+One-factor Burst sweeps (Fig.~\ref{fig:sens}) place $\beta{=}0.60$ and
+$\varepsilon{=}0.02$ in the interior of mild SLA variation; deadline scale
+shifts absolute SLA sharply (as expected) while hybrid-over-DCBO direction holds at
+scales 8 and 12. The gate uses the live fog count ($n_f\ge 450\Rightarrow$
+exact DCBO).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\linewidth]{fig07_scalability.pdf}
+\caption{Surveillance mean SLA versus target size $N$ (averaged over scenarios).}
+\label{fig:scale}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\linewidth]{fig08_overhead.pdf}
+\caption{Normalized control overhead for colony-plane methods ($N{=}100$).
+GNN, Vector, and DCBO remain matched.}
+\label{fig:oh}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\linewidth]{fig13_sensitivity.pdf}
+\caption{One-factor sensitivity on Burst $N{=}100$ (5 trials): blend, deadline
+scale, and $\varepsilon$.}
+\label{fig:sens}
+\end{figure}
+\FloatBarrier
+
+\subsection{\texorpdfstring{Large-$N$ check}{Large-N check}}
+At $N{=}1000$ (Table~\ref{tab:n1000}, Fig.~\ref{fig:n1000}) absolute SLA is low
+and overhead matches ($\approx$2112--2140). Burst/churn means still favor GNN;
+Holm tests after correction remain mostly non-significant, consistent with
+near-parity under the large-$N$ blend gate.
+
+\begin{table}[htbp]
+\centering
+\caption{Multipipe at $N{=}1000$: mean SLA \% (10 trials).}
+\label{tab:n1000}
+\small
+\begin{tabular}{@{}llllr@{}}
+\toprule
+Scenario & GNN & Vector & DCBO & Overhead \\
+\midrule
+Normal & 0.82 & \textbf{0.80} & 0.81 & 2112 \\
+Burst & \textbf{2.53} & 3.13 & 3.59 & 2112 \\
+Churn & \textbf{1.94} & 2.27 & 2.70 & 2140 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\linewidth]{fig09_sla_n1000.pdf}
+\caption{Multipipe SLA at $N{=}1000$ (mean $\pm$ std, 10 trials).}
+\label{fig:n1000}
+\end{figure}
+\FloatBarrier
+
+\subsection{Named baselines and Pareto view}
+FogPlan, Greedy-Nearest, and Static-DCBO can post lower multipipe SLA than the
+colony hybrids (Table~\ref{tab:base}, Fig.~\ref{fig:base}), but overhead and
+colony counts are not comparable. Fig.~\ref{fig:pareto} plots SLA against
+normalized overhead on Burst: flat methods sit at lower cost; colony-plane
+methods cluster together; tabular DRL sits between them on cost while leading
+SLA inside the cold-start plane. The claim we defend is therefore
+\emph{within-plane} hybrid improvement over DCBO at matched hybrid/DCBO
+overhead.
+
+\begin{table}[htbp]
+\centering
+\caption{Multipipe $N{=}100$: flat baselines (5 trials) beside the tuning-lock
+colony means. Overhead is not matched across planes.}
+\label{tab:base}
+\scriptsize
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+Scenario & FogPlan & Greedy & Static & GNN & Vector & DCBO \\
+\midrule
+Normal & 8.28 & \textbf{7.32} & 9.25 & 10.64 & 10.98 & 11.48 \\
+Burst & 23.24 & 22.63 & \textbf{21.61} & 24.89 & 25.35 & 26.13 \\
+Churn & 19.88 & 19.37 & \textbf{19.02} & 22.31 & 22.43 & 23.21 \\
+Overhead & 253 & 659 & 760 & $\approx$1769 & $\approx$1769 & $\approx$1769 \\
+Colonies & 1 & 1 & 19 & $\approx$7.6 & $\approx$7.6 & $\approx$7.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.88\linewidth]{fig10_baselines.pdf}
+\caption{Flat baselines versus colony-bounded methods on multipipe $N{=}100$
+(5 trials).}
+\label{fig:base}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\linewidth]{fig12_pareto.pdf}
+\caption{Pareto view: SLA vs normalized control overhead (Burst, $N{=}100$).}
+\label{fig:pareto}
+\end{figure}
+\FloatBarrier
+
+\section{Discussion}
+\label{sec:disc}
+
+Bounding $|A_t|$ ties learning to the same CRT/GRT traffic DynaCol already
+exchanges. Inside that plane, hybrid L2 improves $N{=}100$ multipipe SLA versus
+DCBO with Holm-significant paired evidence at $n{=}20$
+(Table~\ref{tab:journal}).
+
+The title emphasizes \emph{colony-bounded hybrid learning} rather than a
+universal GNN-over-Vector gap: encoder ranking is mixed and non-significant on the
+journal grid, while GraphSAGE remains the named structured encoder with an
+offline BC+ranking import path. Tabular DRL shows that a lightweight learner on
+the same CRT can lead absolute SLA; the hybrid's distinctive properties are
+DCBO anchoring, scale-aware exact fallback, and structure-aware offline
+initialization---not raw dominance over every same-plane learner.
+
+Flat baselines in Table~\ref{tab:base} and Fig.~\ref{fig:pareto} are useful for
+absolute SLA, not for a same-plane ranking. We do not claim new cold-start
+formation, new FCM election, or testbed validation. Limits include
+simulation-only evidence, calibrated multipipe deadlines (Fig.~\ref{fig:sens}),
+logged (not fully on-policy) offline data, and the omission of Edgeward on
+multipipe for runtime reasons.
+
+\section{Conclusion}
+\label{sec:conc}
+
+DynaCol-GNN keeps fog placement inside cold-start colony views: L2 mixes online
+scoring with DCBO, actions stay in CRT/GRT top-$K$, and large fabrics fall back
+to exact DCBO. On iFogSim2 the hybrid lowers SLA at $N{=}100$ versus DCBO at
+matched overhead on surveillance and multipipe workloads, with
+Holm-significant multipipe gaps at $n{=}20$, and stays close at $N{=}1000$.
+GraphSAGE and the vector ablation are statistically tied as encoders; a
+same-plane tabular learner provides a strong SLA control. Flat baselines remind
+the reader that absolute SLA and control-plane cost can trade off outside the
+colony plane.
+
+Next steps include CRT-ablated learning, stronger on-policy offline training,
+deeper same-plane neural baselines, and testbed runs.
+
+\section*{Declarations}
+
+\paragraph{Funding.}
+The authors declare that no funds, grants, or other support were received
+during the preparation of this manuscript.
+
+\paragraph{Competing interests.}
+The authors have no relevant financial or non-financial interests to disclose.
+
+\paragraph{Author contributions.}
+R.N.\ designed the method, implemented the experiments, and drafted the
+manuscript. A.G.\ supervised the research and revised the manuscript. Both
+authors read and approved the final manuscript.
+
+\paragraph{Data availability.}
+Simulation configs, trial CSVs, summary tables, and figure scripts are
+included in the accompanying \texttt{dynacol-gnn} artifact directory
+(\texttt{configs/}, \texttt{evaluation/results/}, \texttt{evaluation/}).
+
+\paragraph{Code availability.}
+Source code for the colony-bounded placers and evaluation harness is provided
+with the artifact (Java iFogSim2 extension under \texttt{ifogsim2/} and Python
+tools under \texttt{dynacol-gnn/}).
+
+\appendix
+\section{Reused DynaCol algorithms}
+\label{app:dynacol}
+
+For self-containment while the prior DynaCol manuscript is under review
+\cite{nabati_dynacol_cluster2026}, we reprint the cold-start, handover, and
+DCBO L1--L3 skeletons that this paper leaves unchanged. These algorithms are
+\emph{not} claimed as contributions here.
+
+\begin{algorithm}[t]
+\caption{Cold-start join (Create\_And\_Add\_FogNode)}
+\label{alg:cold}
+\begin{algorithmic}[1]
+\Require join event for node $FID$; timers $W_t$, $T_{\mathrm{adv}}$; radius MaxColonySize
+\State state $\leftarrow$ Unassigned
+\State broadcast QueryColony($FID$); start timer $T$
+\If{no response and $T\ge W_t$}
+  \State self-elect FCM; init CRT/GRT; AdvertisePeriodically($T_{\mathrm{adv}}$)
+\Else
+  \State $resp\leftarrow$ best JoinScore response
+  \If{$L(FID,resp.\mathrm{FCM})<$ MaxColonySize}
+    \State JoinOrNegotiate($resp$) \Comment{Alg.~\ref{alg:handover}}
+  \EndIf
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[t]
+\caption{JoinOrNegotiate (potency-based FCM handover)}
+\label{alg:handover}
+\begin{algorithmic}[1]
+\Require response $resp$ with colony id, FCM, CRT
+\If{self is FCM-candidate and Potency(self)$>$Potency($resp$.FCM)$+\varepsilon$ and cooldown elapsed}
+  \State negotiate ManagerTakeoverRequest; on accept promote self and merge CRT
+\Else
+  \State join $resp$.ColonyID under $resp$.FCM; FCM updates CRT/GRT
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[t]
+\caption{DCBO\_PlaceService (L1--L3)}
+\label{alg:dcbo}
+\begin{algorithmic}[1]
+\Require service $s$, current host $h_{\mathrm{cur}}$, tables CRT, GRT
+\If{$h_{\mathrm{cur}}$ feasible and SLA-safe}
+  \State \Return $h_{\mathrm{cur}}$ \Comment{L1 sticky}
+\EndIf
+\State Cand $\leftarrow$ top-$K_{\mathrm{crt}}$ feasible CRT hosts by $J(s,\cdot)$
+\If{Cand $\ne\emptyset$}
+  \State \Return $\arg\min$ Cand \Comment{L2 local}
+\EndIf
+\For{all col in top-$K_{\mathrm{grt}}$(GRT)}
+  \If{DelegatePlace($s$, col.FCM) succeeds}
+    \State \Return delegated host \Comment{L2 neighbor}
+  \EndIf
+\EndFor
+\State \Return cloud by latency/cost \Comment{L3}
+\end{algorithmic}
+\end{algorithm}
+
+\section{Hyperparameters}
+\begin{table}[h]
+\centering
+\caption{Locked-grid hyperparameters.}
+\label{tab:hyper}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Parameter & Default / note \\
+\midrule
+CRT top-$K_{\mathrm{crt}}$ / GRT top-$K_{\mathrm{grt}}$ & $5$ / $3$ \\
+$\varepsilon$ (hybrid) & $0.02$ on multipipe ($0$ at large $N$) \\
+$\varepsilon$ (tabular DRL) & $0.15$ \\
+Vector / GNN LR & $0.05$ / $0.04$ \\
+GNN hidden & $16$, 2 layers, $\tanh$ \\
+Host / context dims & $8$ / $8$ \\
+Blend (multipipe) & $0.60$ \\
+Multipipe SLA scale & $10.0$ \\
+Large-$N$ gate & $n_f\ge 450$ $\rightarrow$ exact DCBO \\
+Offline objective & reward-advantage BC + structure ranking \\
+Trials & 5 (tuning lock/baselines); 20 (journal $N{=}100$); 10 ($N{=}1000$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\bibliographystyle{apalike}
+\bibliography{refs}
+
+\end{document}

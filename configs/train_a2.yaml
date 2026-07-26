@@ -1,0 +1,13 @@
+# Phase-2 offline GIN/PPO (wired)
+
+encoder: gin_style_mp
+learning_rate: 0.05
+epochs: 8
+batch: 64
+clip: 0.2
+export_format: json_weights  # OnlineColonyGnn loadWeights
+
+# Flow:
+# 1) python3 dynacol-gnn/offline/collect_traj.py
+# 2) python3 dynacol-gnn/offline/train_gin_ppo.py --traj ... --out ...
+# 3) run grid with -Ddynacolgnn.gnnWeights=<absolute path>

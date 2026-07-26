@@ -1,0 +1,14 @@
+{
+  "name": "s23_baselines_ft5",
+  "description": "Named baselines on multipipe N=100 (5 trials). Edgeward omitted: multipipe iFogSim2 runs were >25 min/trial.",
+  "nodes": [100],
+  "scenarios": ["normal", "burst", "churn"],
+  "policies": ["static_dcbo", "fogplan", "greedy"],
+  "trials": 5,
+  "seed_base": 42,
+  "out_subdir": "simulator_gnn_baselines_ft5",
+  "java_props": {
+    "dynacolgnn.appVariant": "multipipe",
+    "dynacolgnn.slaDeadlineScale": "10.0"
+  }
+}

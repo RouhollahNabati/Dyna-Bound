@@ -1,0 +1,15 @@
+{
+  "name": "grid_a2_multipipe_smoke",
+  "description": "A2 vs A1 separation smoke: multipipe DAG, hybrid blend, graph prior on GNN",
+  "nodes": [100],
+  "scenarios": ["normal", "burst"],
+  "policies": ["colony_gnn", "colony_rl", "dcbo"],
+  "trials": 3,
+  "seed_base": 42,
+  "out_subdir": "simulator_multipipe_smoke",
+  "java_props": {
+    "dynacolgnn.appVariant": "multipipe",
+    "dynacolgnn.learnBlend": "0.60",
+    "dynacolgnn.slaDeadlineScale": "10.0"
+  }
+}

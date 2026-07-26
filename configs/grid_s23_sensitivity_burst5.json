@@ -1,0 +1,18 @@
+{
+  "name": "s23_sensitivity_burst5",
+  "description": "Driver note: one-factor sensitivity is run by evaluation/run_sensitivity.py (blend, deadline, epsilon). This JSON documents the locked baseline props.",
+  "nodes": [100],
+  "scenarios": ["burst"],
+  "policies": ["colony_gnn", "colony_rl", "dcbo"],
+  "trials": 5,
+  "seed_base": 42,
+  "out_subdir": "simulator_sens_blend_0p60",
+  "java_props": {
+    "dynacolgnn.appVariant": "multipipe",
+    "dynacolgnn.learnBlend": "0.60",
+    "dynacolgnn.slaDeadlineScale": "10.0",
+    "dynacolgnn.epsilon": "0.02",
+    "dynacolgnn.gnnFineTune": "true",
+    "dynacolgnn.gnnWeights": "/home/dispro/Projects/Dynacol/dynacol-gnn/offline/data/gnn_weights_s23.json"
+  }
+}

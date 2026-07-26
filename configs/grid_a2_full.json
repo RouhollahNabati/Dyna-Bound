@@ -1,0 +1,19 @@
+{
+  "name": "grid_a2_full",
+  "description": "Target journal grid (do not run until learner is validated)",
+  "nodes": [100, 300, 500, 1000],
+  "scenarios": ["normal", "burst", "churn"],
+  "policies": [
+    "colony_gnn",
+    "colony_rl",
+    "dcbo",
+    "static_dcbo",
+    "fogplan",
+    "greedy",
+    "edgeward",
+    "drl"
+  ],
+  "trials": 10,
+  "seed_base": 1000,
+  "results_dir": "dynacol-gnn/evaluation/results"
+}

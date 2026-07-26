@@ -1,0 +1,10 @@
+{
+  "name": "grid_a2_n500_burst_eps0",
+  "description": "N=500 burst only after epsilon=0 at large scale",
+  "nodes": [500],
+  "scenarios": ["burst", "churn", "normal"],
+  "policies": ["colony_gnn", "dcbo"],
+  "trials": 5,
+  "seed_base": 42,
+  "out_subdir": "simulator_n500_eps0"
+}

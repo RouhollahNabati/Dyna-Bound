@@ -1,0 +1,19 @@
+nodes,scenario,comparison,n_pairs,mean_diff,ci_lo,ci_hi,cohen_d,t_stat,p_raw,p_holm,significant_holm,ci_excludes_zero
+100,Burst Load,DRL_vs_DCBO,20,-4.0905,-5.1469,-3.0289,-1.6509,-7.3828,0.0,0.0,Yes,Yes
+100,Burst Load,GNN_vs_DCBO,20,-1.3007,-1.8926,-0.7262,-0.9383,-4.1962,2.7e-05,0.000297,Yes,Yes
+100,Burst Load,GNN_vs_DRL,20,2.7898,1.8315,3.7992,1.1834,5.2925,0.0,0.0,Yes,Yes
+100,Burst Load,GNN_vs_Vector,20,0.068,-0.745,0.8914,0.0344,0.1538,0.877748,1.0,No,No
+100,Burst Load,Vector_vs_DCBO,20,-1.3687,-2.2763,-0.5374,-0.6804,-3.0429,0.002343,0.011715,Yes,Yes
+100,Burst Load,Vector_vs_DRL,20,2.7218,1.4668,4.1167,0.8708,3.8945,9.8e-05,0.000882,Yes,Yes
+100,Churn,DRL_vs_DCBO,20,-3.9125,-5.1395,-2.7125,-1.397,-6.2476,0.0,0.0,Yes,Yes
+100,Churn,GNN_vs_DCBO,20,-0.9111,-1.5238,-0.3074,-0.6398,-2.8614,0.004217,0.016868,Yes,Yes
+100,Churn,GNN_vs_DRL,20,3.0014,1.8999,4.1616,1.1465,5.1272,0.0,0.0,Yes,Yes
+100,Churn,GNN_vs_Vector,20,0.236,-0.2678,0.8258,0.1826,0.8168,0.414071,1.0,No,No
+100,Churn,Vector_vs_DCBO,20,-1.1471,-1.8208,-0.4842,-0.751,-3.3588,0.000783,0.006264,Yes,Yes
+100,Churn,Vector_vs_DRL,20,2.7654,1.4763,4.1838,0.8771,3.9224,8.8e-05,0.00088,Yes,Yes
+100,Normal Load,DRL_vs_DCBO,20,-3.7532,-4.765,-2.8549,-1.7036,-7.6187,0.0,0.0,Yes,Yes
+100,Normal Load,GNN_vs_DCBO,20,-0.9404,-1.4903,-0.4302,-0.7348,-3.2862,0.001016,0.007112,Yes,Yes
+100,Normal Load,GNN_vs_DRL,20,2.8129,1.9966,3.6596,1.4724,6.5849,0.0,0.0,Yes,Yes
+100,Normal Load,GNN_vs_Vector,20,-0.2262,-0.7749,0.3382,-0.1646,-0.7361,0.461678,1.0,No,No
+100,Normal Load,Vector_vs_DCBO,20,-0.7142,-1.1528,-0.2906,-0.7089,-3.1703,0.001523,0.009138,Yes,Yes
+100,Normal Load,Vector_vs_DRL,20,3.0391,2.0232,4.152,1.2346,5.5213,0.0,0.0,Yes,Yes

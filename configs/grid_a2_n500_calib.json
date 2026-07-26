@@ -1,0 +1,11 @@
+{
+  "name": "grid_a2_n500_calib",
+  "description": "N=500 calibration after adaptive blend (gnn/rl/dcbo)",
+  "nodes": [500],
+  "scenarios": ["normal", "burst", "churn"],
+  "policies": ["colony_gnn", "colony_rl", "dcbo"],
+  "trials": 5,
+  "seed_base": 42,
+  "out_subdir": "simulator_n500_calib",
+  "results_dir": "dynacol-gnn/evaluation/results"
+}

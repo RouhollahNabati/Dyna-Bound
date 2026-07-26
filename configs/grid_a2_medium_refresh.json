@@ -1,0 +1,10 @@
+{
+  "name": "grid_a2_medium_refresh",
+  "description": "Post-parity refresh: N=100/300/500 x normal/burst/churn",
+  "nodes": [100, 300, 500],
+  "scenarios": ["normal", "burst", "churn"],
+  "policies": ["colony_gnn", "colony_rl", "dcbo"],
+  "trials": 5,
+  "seed_base": 42,
+  "out_subdir": "simulator_medium_v2"
+}

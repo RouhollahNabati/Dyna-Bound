@@ -1,0 +1,10 @@
+method,nodes,scenario,n_trials,sla_mean,sla_std,p95_mean,p95_std,overhead_mean,colonies_mean
+DynaCol-GNN,100,Burst Load,3,25.33,2.072,783.316,27.644,1771.111,7.67
+DynaCol-RL,100,Burst Load,3,24.315,0.95,777.327,16.23,1771.111,7.67
+DynaCol/DCBO,100,Burst Load,3,26.279,3.144,772.314,37.74,1771.111,7.67
+DynaCol-GNN,100,Churn,3,22.475,1.697,775.345,18.237,1778.222,7.67
+DynaCol-RL,100,Churn,3,20.958,0.365,762.623,18.695,1778.222,7.67
+DynaCol/DCBO,100,Churn,3,22.843,2.414,767.68,32.16,1778.222,7.67
+DynaCol-GNN,100,Normal Load,3,10.812,2.374,779.439,21.6,1771.111,7.67
+DynaCol-RL,100,Normal Load,3,10.685,1.599,767.654,19.957,1771.111,7.67
+DynaCol/DCBO,100,Normal Load,3,11.602,2.795,768.34,37.932,1771.111,7.67

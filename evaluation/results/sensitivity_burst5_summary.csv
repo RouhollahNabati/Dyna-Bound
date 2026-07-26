@@ -1,0 +1,25 @@
+factor,value,method,scenario,n_trials,sla_mean,sla_std,overhead_mean
+blend,0.40,DynaCol-GNN,Burst Load,5,25.0422,2.5019,1768.53
+blend,0.40,DynaCol-RL,Burst Load,5,26.5176,2.989,1768.53
+blend,0.40,DynaCol/DCBO,Burst Load,5,26.2452,3.1592,1768.53
+blend,0.60,DynaCol-GNN,Burst Load,5,24.7908,2.2382,1768.53
+blend,0.60,DynaCol-RL,Burst Load,5,25.3896,2.8145,1768.53
+blend,0.60,DynaCol/DCBO,Burst Load,5,26.4116,2.7799,1768.53
+blend,0.80,DynaCol-GNN,Burst Load,5,24.5162,2.2365,1768.53
+blend,0.80,DynaCol-RL,Burst Load,5,25.4996,2.4786,1768.53
+blend,0.80,DynaCol/DCBO,Burst Load,5,26.0928,2.8306,1768.53
+deadline,8.0,DynaCol-GNN,Burst Load,5,41.565,1.9083,1768.53
+deadline,8.0,DynaCol-RL,Burst Load,5,42.0998,2.3832,1768.53
+deadline,8.0,DynaCol/DCBO,Burst Load,5,42.921,2.3539,1768.53
+deadline,10.0,DynaCol-GNN,Burst Load,5,25.378,1.6904,1768.53
+deadline,10.0,DynaCol-RL,Burst Load,5,25.0506,3.0826,1768.53
+deadline,10.0,DynaCol/DCBO,Burst Load,5,25.7068,2.4712,1768.53
+deadline,12.0,DynaCol-GNN,Burst Load,5,9.0868,2.1275,1768.53
+deadline,12.0,DynaCol-RL,Burst Load,5,9.4898,2.5083,1768.53
+deadline,12.0,DynaCol/DCBO,Burst Load,5,10.3952,2.7739,1768.53
+epsilon,0,DynaCol-GNN,Burst Load,5,25.8446,2.9454,1768.53
+epsilon,0,DynaCol-RL,Burst Load,5,25.9756,2.5364,1768.53
+epsilon,0,DynaCol/DCBO,Burst Load,5,26.144,2.6003,1768.53
+epsilon,0.02,DynaCol-GNN,Burst Load,5,25.4038,2.1939,1768.53
+epsilon,0.02,DynaCol-RL,Burst Load,5,25.319,2.6184,1768.53
+epsilon,0.02,DynaCol/DCBO,Burst Load,5,26.3122,2.7814,1768.53

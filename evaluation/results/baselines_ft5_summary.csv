@@ -1,0 +1,10 @@
+method,nodes,scenario,n_trials,sla_mean,sla_std,p95_mean,p95_std,overhead_mean,colonies_mean
+FogPlan-MinCost,100,Burst Load,5,23.242,1.143,732.576,2.565,253.333,1.0
+Greedy-Nearest,100,Burst Load,5,22.633,1.216,723.5,4.419,659.2,1.0
+Static-DCBO,100,Burst Load,5,21.61,4.885,743.626,15.433,760.0,19.0
+FogPlan-MinCost,100,Churn,5,19.875,0.631,731.8,7.553,253.333,1.0
+Greedy-Nearest,100,Churn,5,19.37,0.6,721.64,1.801,659.2,1.0
+Static-DCBO,100,Churn,5,19.022,4.524,741.625,17.539,760.0,19.0
+FogPlan-MinCost,100,Normal Load,5,8.281,0.395,726.884,4.442,253.333,1.0
+Greedy-Nearest,100,Normal Load,5,7.316,0.467,717.822,6.346,659.2,1.0
+Static-DCBO,100,Normal Load,5,9.251,1.637,743.834,14.027,760.0,19.0

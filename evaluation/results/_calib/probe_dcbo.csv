@@ -1,0 +1,2 @@
+method,policy,nodes,scenario,trial,seed,p95_ms,mean_loop_ms,sla_pct,overhead_norm,control_messages,colonies,variant,mean_energy_per_req,total_cost
+DynaCol/DCBO,DYNACOL_DCBO,100,Normal Load,1,159,790.665,438.626,47.849,1745.333,461,7,,3346.738816,667256.440000

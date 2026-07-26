@@ -1,0 +1,10 @@
+nodes,scenario,comparison,n_pairs,mean_sla_a,mean_sla_b,mean_diff_a_minus_b,t_stat,p_raw,p_holm,significant_holm
+1000,Burst Load,GNN_vs_DCBO,10,2.5297,3.5862,-1.0565,-1.7817,0.074803,0.523621,No
+1000,Burst Load,GNN_vs_Vector,10,2.5297,3.1325,-0.6028,-1.6179,0.105674,0.539868,No
+1000,Burst Load,Vector_vs_DCBO,10,3.1325,3.5862,-0.4537,-2.0367,0.04168,0.37512,No
+1000,Churn,GNN_vs_DCBO,10,1.9398,2.6957,-0.7559,-1.6955,0.089978,0.539868,No
+1000,Churn,GNN_vs_Vector,10,1.9398,2.2695,-0.3297,-1.1312,0.257975,1.0,No
+1000,Churn,Vector_vs_DCBO,10,2.2695,2.6957,-0.4262,-1.9383,0.052591,0.420728,No
+1000,Normal Load,GNN_vs_DCBO,10,0.823,0.8126,0.0104,0.4777,0.632882,1.0,No
+1000,Normal Load,GNN_vs_Vector,10,0.823,0.7962,0.0268,0.6999,0.484013,1.0,No
+1000,Normal Load,Vector_vs_DCBO,10,0.7962,0.8126,-0.0164,-0.3874,0.698429,1.0,No

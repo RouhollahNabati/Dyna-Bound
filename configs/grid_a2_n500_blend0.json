@@ -1,0 +1,10 @@
+{
+  "name": "grid_a2_n500_blend0",
+  "description": "N=500 with GNN learnBlend=0 (DCBO-rank parity check)",
+  "nodes": [500],
+  "scenarios": ["burst", "churn", "normal"],
+  "policies": ["colony_gnn", "dcbo"],
+  "trials": 5,
+  "seed_base": 42,
+  "out_subdir": "simulator_n500_blend0"
+}

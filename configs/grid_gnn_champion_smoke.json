@@ -1,0 +1,16 @@
+{
+  "name": "grid_gnn_champion_smoke",
+  "description": "HID16 + graph-SLA GNN vs Vector vs DCBO, matched blend 0.70",
+  "nodes": [100],
+  "scenarios": ["normal", "burst", "churn"],
+  "policies": ["colony_gnn", "colony_rl", "dcbo"],
+  "trials": 3,
+  "seed_base": 42,
+  "out_subdir": "simulator_gnn_champion_smoke",
+  "java_props": {
+    "dynacolgnn.appVariant": "multipipe",
+    "dynacolgnn.learnBlend": "0.70",
+    "dynacolgnn.slaDeadlineScale": "10.0",
+    "dynacolgnn.epsilon": "0.03"
+  }
+}

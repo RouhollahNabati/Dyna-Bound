@@ -1,0 +1,10 @@
+{
+  "name": "grid_a2_smoke",
+  "description": "Comparative smoke: colony_gnn vs colony_rl vs dcbo",
+  "nodes": [100, 300],
+  "scenarios": ["normal", "burst"],
+  "policies": ["colony_gnn", "colony_rl", "dcbo"],
+  "trials": 3,
+  "seed_base": 42,
+  "results_dir": "dynacol-gnn/evaluation/results"
+}

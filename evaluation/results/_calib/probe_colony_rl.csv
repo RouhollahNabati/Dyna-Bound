@@ -1,0 +1,2 @@
+method,policy,nodes,scenario,trial,seed,p95_ms,mean_loop_ms,sla_pct,overhead_norm,control_messages,colonies,variant,mean_energy_per_req,total_cost
+DynaCol-RL,COLONY_RL,100,Normal Load,1,159,781.461,408.901,41.649,1745.333,461,7,,3388.904352,667260.920000

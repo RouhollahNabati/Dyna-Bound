@@ -1,0 +1,15 @@
+{
+  "name": "grid_online_gnn_smoke",
+  "description": "Smoke: online GNN (no import) vs vector vs dcbo multipipe N=100 after DAG feature fix",
+  "nodes": [100],
+  "scenarios": ["normal", "burst", "churn"],
+  "policies": ["colony_gnn", "colony_rl", "dcbo"],
+  "trials": 3,
+  "seed_base": 42,
+  "out_subdir": "simulator_online_gnn_smoke",
+  "java_props": {
+    "dynacolgnn.appVariant": "multipipe",
+    "dynacolgnn.learnBlend": "0.60",
+    "dynacolgnn.slaDeadlineScale": "10.0"
+  }
+}

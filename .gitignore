@@ -1,0 +1,38 @@
+# Python
+.venv/
+offline/.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Logs / run noise
+*.log
+*_nohup.out
+*nohup.out
+
+# LaTeX build intermediates (keep main.pdf)
+latex/*.aux
+latex/*.bbl
+latex/*.blg
+latex/*.out
+latex/*.toc
+latex/*.lof
+latex/*.lot
+latex/*.synctex.gz
+latex/*.fls
+latex/*.fdb_latexmk
+
+# Generated sensitivity grids
+configs/_sensitivity_generated/
+
+# OS / IDE
+.DS_Store
+.idea/
+*.iml
+.vscode/
+
+# Java build
+**/out/
+**/bin/
+*.class

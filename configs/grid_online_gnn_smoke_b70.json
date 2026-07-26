@@ -1,0 +1,15 @@
+{
+  "name": "grid_online_gnn_smoke_b70",
+  "description": "Online GNN vs Vector vs DCBO with learnBlend=0.70",
+  "nodes": [100],
+  "scenarios": ["normal", "burst", "churn"],
+  "policies": ["colony_gnn", "colony_rl", "dcbo"],
+  "trials": 3,
+  "seed_base": 42,
+  "out_subdir": "simulator_path2_v4_online",
+  "java_props": {
+    "dynacolgnn.appVariant": "multipipe",
+    "dynacolgnn.learnBlend": "0.70",
+    "dynacolgnn.slaDeadlineScale": "10.0"
+  }
+}

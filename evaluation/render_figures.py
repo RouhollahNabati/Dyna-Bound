@@ -62,7 +62,7 @@ def main() -> int:
         FIG / "fig_sla_n100_surveillance.png",
         "Surveillance DAG — SLA violation at N=100",
         {
-            "Hybrid": pick(s100, "DynaCol-GNN"),
+            "Hybrid": pick(s100, "Dyna-Bound"),
             "DCBO": pick(s100, "DynaCol/DCBO"),
         },
         labels,
@@ -76,7 +76,7 @@ def main() -> int:
         FIG / "fig_sla_n100_multipipe.png",
         "Multipipe DAG — champion GNN vs Vector vs DCBO (N=100)",
         {
-            "GNN": pick(c100, "DynaCol-GNN"),
+            "GNN": pick(c100, "Dyna-Bound"),
             "Vector": pick(c100, "DynaCol-RL"),
             "DCBO": pick(c100, "DynaCol/DCBO"),
         },
@@ -91,7 +91,7 @@ def main() -> int:
         FIG / "fig_sla_n100_online_context.png",
         "Multipipe DAG — online-only GNN vs Vector vs DCBO (N=100)",
         {
-            "Online-GNN": pick(m100, "DynaCol-GNN"),
+            "Online-GNN": pick(m100, "Dyna-Bound"),
             "Vector": pick(m100, "DynaCol-RL"),
             "DCBO": pick(m100, "DynaCol/DCBO"),
         },
@@ -106,7 +106,7 @@ def main() -> int:
         FIG / "fig_sla_n100_offline.png",
         "Multipipe DAG — earlier offline GNN (pre-champion, N=100)",
         {
-            "Offline-GNN": pick(o100, "DynaCol-GNN"),
+            "Offline-GNN": pick(o100, "Dyna-Bound"),
             "Vector": pick(o100, "DynaCol-RL"),
             "DCBO": pick(o100, "DynaCol/DCBO"),
         },
@@ -116,7 +116,7 @@ def main() -> int:
 
     # Scalability surveillance (hybrid vs dcbo, average over scenarios)
     fig, ax = plt.subplots(figsize=(7.2, 3.6))
-    for method, label in (("DynaCol-GNN", "Hybrid"), ("DynaCol/DCBO", "DCBO")):
+    for method, label in (("Dyna-Bound", "Hybrid"), ("DynaCol/DCBO", "DCBO")):
         xs, ys = [], []
         for n in (100, 300, 500):
             rr = [r for r in surv if int(float(r["nodes"])) == n and r["method"] == method]

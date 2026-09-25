@@ -7,12 +7,12 @@ export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
 export PATH="$JAVA_HOME/bin:$PATH"
 export LD_LIBRARY_PATH="$JAVA_HOME/lib:$JAVA_HOME/lib/server:${LD_LIBRARY_PATH:-}"
 
-PY="${ROOT}/dynacol-gnn/offline/.venv/bin/python"
+PY="${ROOT}/dyna-bound/offline/.venv/bin/python"
 if [[ ! -x "$PY" ]]; then
   PY=python3
 fi
-EVAL="${ROOT}/dynacol-gnn/evaluation"
-CFG="${ROOT}/dynacol-gnn/configs"
+EVAL="${ROOT}/dyna-bound/evaluation"
+CFG="${ROOT}/dyna-bound/configs"
 LOG="${EVAL}/results/jos_revision_run.log"
 mkdir -p "${EVAL}/results"
 exec > >(tee -a "$LOG") 2>&1

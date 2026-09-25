@@ -1,2 +1,2 @@
 method,policy,nodes,scenario,trial,seed,p95_ms,mean_loop_ms,sla_pct,overhead_norm,control_messages,colonies,variant,mean_energy_per_req,total_cost
-DynaCol-GNN,COLONY_GNN,100,Normal Load,1,159,778.372,405.409,11.058,1745.333,461,7,,3242.981843,667251.960000
+Dyna-Bound,COLONY_GNN,100,Normal Load,1,159,778.372,405.409,11.058,1745.333,461,7,,3242.981843,667251.960000

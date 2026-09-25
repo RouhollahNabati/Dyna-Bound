@@ -1,7 +1,6 @@
 package org.fog.dynacolgnn.learn;
 
 import org.fog.dynacol.model.ColonyResourceEntry;
-import org.fog.dynacol.util.FogTopologyUtil;
 import org.fog.entities.FogDevice;
 
 import java.io.IOException;
@@ -17,8 +16,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Online 2-layer GraphSAGE-style GNN over CRT candidates (RTT affinity).
- * Used only by {@code EncoderKind.GNN}; vector ablation keeps {@link OnlineLinearPolicy}.
+ * Online 2-layer GraphSAGE-style GNN over CRT candidates.
+ * Adjacency is structure-aware (RTT + coloc + producer pull) via
+ * {@link ColonyFeatureEncoder#structureAffinityWeights}; ablates to RTT-only
+ * with {@code -Ddynacolgnn.structureAdj=false}.
  *
  * <p>Forward: {@code h' = tanh(W_self h + W_neigh A h)}, two layers, then linear
  * readout on {@code concat(h, context)} plus a mild coloc/pull residual.
@@ -100,7 +101,7 @@ public final class OnlineColonyGnn {
     }
 
     /**
-     * Load JSON exported by {@code dynacol-gnn/offline/train_gin_ppo.py}.
+     * Load JSON exported by {@code dyna-bound/offline/train_gin_ppo.py}.
      * Keys: w1_self, w1_neigh, w2_self, w2_neigh, readout (row-major matrices).
      */
     public void loadWeights(Path jsonPath) throws IOException {
@@ -164,24 +165,26 @@ public final class OnlineColonyGnn {
     /**
      * @param features {@link ColonyFeatureEncoder#FEATURE_DIM} rows (host || service || bias)
      * @param baseUtilities inverted DCBO utilities (same length)
+     * @param colocAffinity per-candidate producer co-location in \([0,1]\), or null
      */
     public int selectHybridIndex(List<ColonyResourceEntry> candidates,
                                  Map<Integer, FogDevice> deviceIndex,
                                  double[][] features,
                                  double[] baseUtilities,
-                                 double learnBlend) {
+                                 double learnBlend,
+                                 double[] colocAffinity) {
         if (features == null || features.length == 0) {
             return -1;
         }
         if (features.length == 1) {
-            forward(candidates, deviceIndex, features);
+            forward(candidates, deviceIndex, features, colocAffinity);
             return 0;
         }
         if (random.nextDouble() < epsilon) {
-            forward(candidates, deviceIndex, features);
+            forward(candidates, deviceIndex, features, colocAffinity);
             return random.nextInt(features.length);
         }
-        double[] scores = forward(candidates, deviceIndex, features);
+        double[] scores = forward(candidates, deviceIndex, features, colocAffinity);
         double blend = Math.max(0.0, learnBlend);
         int best = 0;
         double bestScore = (baseUtilities != null ? baseUtilities[0] : 0.0) + blend * scores[0];
@@ -194,6 +197,15 @@ public final class OnlineColonyGnn {
             }
         }
         return best;
+    }
+
+    /** Backward-compatible overload (RTT/structure without explicit coloc vector). */
+    public int selectHybridIndex(List<ColonyResourceEntry> candidates,
+                                 Map<Integer, FogDevice> deviceIndex,
+                                 double[][] features,
+                                 double[] baseUtilities,
+                                 double learnBlend) {
+        return selectHybridIndex(candidates, deviceIndex, features, baseUtilities, learnBlend, null);
     }
 
     /** Online contrastive update over all CRT candidates (REINFORCE-style). */
@@ -301,10 +313,11 @@ public final class OnlineColonyGnn {
 
     private double[] forward(List<ColonyResourceEntry> candidates,
                              Map<Integer, FogDevice> deviceIndex,
-                             double[][] features) {
+                             double[][] features,
+                             double[] colocAffinity) {
         int n = features.length;
         cacheN = n;
-        cacheAdj = rttAffinityWeights(candidates, deviceIndex, n);
+        cacheAdj = ColonyFeatureEncoder.structureAffinityWeights(candidates, deviceIndex, colocAffinity);
         cacheX = new double[n][IN_DIM];
         cacheCtx = new double[n][CTX_DIM];
         for (int i = 0; i < n; i++) {
@@ -359,43 +372,6 @@ public final class OnlineColonyGnn {
             }
         }
         return out;
-    }
-
-    private static double[][] rttAffinityWeights(List<ColonyResourceEntry> candidates,
-                                                Map<Integer, FogDevice> deviceIndex,
-                                                int n) {
-        double[][] w = new double[n][n];
-        if (candidates == null || candidates.size() != n) {
-            for (int i = 0; i < n; i++) {
-                w[i][i] = 1.0;
-            }
-            return w;
-        }
-        for (int i = 0; i < n; i++) {
-            FogDevice di = deviceIndex != null ? deviceIndex.get(candidates.get(i).getFogDeviceId()) : null;
-            double sum = 0.0;
-            for (int j = 0; j < n; j++) {
-                if (i == j) {
-                    w[i][j] = 1.0;
-                } else {
-                    FogDevice dj = deviceIndex != null ? deviceIndex.get(candidates.get(j).getFogDeviceId()) : null;
-                    double rtt;
-                    if (di != null && dj != null && deviceIndex != null) {
-                        rtt = FogTopologyUtil.estimateRttMs(di, dj, deviceIndex);
-                    } else {
-                        rtt = Math.abs(candidates.get(i).getRttToFcmMs() - candidates.get(j).getRttToFcmMs()) + 1.0;
-                    }
-                    w[i][j] = 1.0 / (1.0 + rtt / 20.0);
-                }
-                sum += w[i][j];
-            }
-            if (sum > 0) {
-                for (int j = 0; j < n; j++) {
-                    w[i][j] /= sum;
-                }
-            }
-        }
-        return w;
     }
 
     private static double[] concat(double[] a, double[] b) {

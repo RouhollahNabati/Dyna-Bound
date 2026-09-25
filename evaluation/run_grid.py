@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run DynaCol-GNN smoke / grid trials into dynacol-gnn/evaluation/results/."""
+"""Run Dyna-Bound smoke / grid trials into dyna-bound/evaluation/results/."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 IFOG = ROOT / "ifogsim2"
 DEFAULT_OUT = Path(__file__).resolve().parent / "results" / "simulator"
-DEFAULT_GRID = ROOT / "dynacol-gnn" / "configs" / "grid_a2_smoke.json"
+DEFAULT_GRID = ROOT / "dyna-bound" / "configs" / "grid_a2_smoke.json"
 
 # CLI scenario key -> CSV scenario label written by the Java runner.
 SCENARIO_CSV = {

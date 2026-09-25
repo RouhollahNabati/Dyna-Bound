@@ -1,4 +1,4 @@
-# Results narrative — DynaCol-GNN (locked, JoS-complete)
+# Results narrative — Dyna-Bound (locked, JoS-complete)
 
 ## Primary claim
 

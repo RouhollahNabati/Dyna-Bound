@@ -13,6 +13,6 @@
     "dynacolgnn.slaDeadlineScale": "10.0",
     "dynacolgnn.epsilon": "0.02",
     "dynacolgnn.gnnFineTune": "true",
-    "dynacolgnn.gnnWeights": "/home/dispro/Projects/Dynacol/dynacol-gnn/offline/data/gnn_weights.json"
+    "dynacolgnn.gnnWeights": "/home/dispro/Projects/Dynacol/dyna-bound/offline/data/gnn_weights.json"
   }
 }

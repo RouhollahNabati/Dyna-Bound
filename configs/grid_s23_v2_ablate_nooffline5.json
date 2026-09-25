@@ -1,0 +1,19 @@
+{
+  "name": "s23_v2_ablate_nooffline5",
+  "description": "No offline weights: online-only colony_gnn (structure adj on)",
+  "nodes": [100],
+  "scenarios": ["normal", "burst", "churn"],
+  "policies": ["colony_gnn", "colony_rl", "dcbo"],
+  "trials": 5,
+  "seed_base": 42,
+  "out_subdir": "simulator_ablate_nooffline5",
+  "java_props": {
+    "dynacolgnn.appVariant": "multipipe",
+    "dynacolgnn.learnBlend": "0.60",
+    "dynacolgnn.slaDeadlineScale": "10.0",
+    "dynacolgnn.epsilon": "0.02",
+    "dynacolgnn.structureAdj": "true",
+    "dynacolgnn.crtAblate": "false",
+    "dynacolgnn.gnnFineTune": "true"
+  }
+}

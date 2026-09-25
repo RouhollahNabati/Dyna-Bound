@@ -9,7 +9,7 @@ The trainer uses **reward-advantage behavioral cloning + structure ranking**
 ## Setup
 
 ```bash
-cd dynacol-gnn/offline
+cd dyna-bound/offline
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```

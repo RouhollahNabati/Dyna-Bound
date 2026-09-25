@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Summarize DynaCol-GNN trial CSVs into a compact comparison table."""
+"""Summarize Dyna-Bound trial CSVs into a compact comparison table."""
 
 from __future__ import annotations
 

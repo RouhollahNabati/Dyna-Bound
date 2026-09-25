@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render JoS-quality figures (300 dpi PNG + PDF) for DynaCol-GNN draft."""
+"""Render JoS-quality figures (300 dpi PNG + PDF) for Dyna-Bound draft."""
 
 from __future__ import annotations
 
@@ -124,7 +124,7 @@ def fig_architecture():
     _box(ax, (8.5, 0.45), 2.9, 0.95, "Bounded messaging\n& membership", fc="#F7F1E8")
     _box(ax, (0.7, 3.25), 2.7, 1.25, "L1 Sticky\nreuse host if feasible", fc="#D9E8D8", ec="#3F6B45")
     _box(ax, (4.2, 2.95), 3.6, 1.85,
-         "L2 DynaCol-GNN\nCRT candidates ≤ K\n"
+         "L2 Dyna-Bound\nCRT candidates ≤ K\n"
          "s = u_DCBO + β · f_θ(φ)\nβ → 0 at large N",
          fc="#D6E4F5", ec="#2F4A6E", fontsize=7.5)
     _box(ax, (8.5, 3.25), 2.8, 1.25, "L3 Cloud\nfallback", fc="#F0D9D9", ec="#7A3E3E")
@@ -205,7 +205,7 @@ def fig_sla_from_summary(summary: Path, stem: str, title: str, methods: list[tup
     rows = rows_n(load(summary), n)
     order = ["Normal Load", "Burst Load", "Churn"]
     labels = ["Normal", "Burst", "Churn"]
-    colors = {"GNN": C_GNN, "DynaCol-GNN": C_GNN, "Hybrid": C_GNN,
+    colors = {"GNN": C_GNN, "Dyna-Bound": C_GNN, "Hybrid": C_GNN,
               "Vector": C_VEC, "DynaCol-RL": C_VEC,
               "DCBO": C_DCBO, "DynaCol/DCBO": C_DCBO}
     series = {}
@@ -225,7 +225,7 @@ def fig_scalability():
     surv = load(path)
     fig, ax = plt.subplots(figsize=(7.2, 3.8))
     for method, label, color in (
-        ("DynaCol-GNN", "Hybrid", C_GNN),
+        ("Dyna-Bound", "Hybrid", C_GNN),
         ("DynaCol/DCBO", "DCBO", C_DCBO),
     ):
         xs, ys, es = [], [], []
@@ -258,7 +258,7 @@ def fig_overhead(trial_dir: Path, stem: str = "fig08_overhead"):
                 continue
             key = (row["method"], row["scenario"])
             buckets.setdefault(key, []).append(float(row["overhead_norm"]))
-    methods = ["DynaCol-GNN", "DynaCol-RL", "DynaCol/DCBO"]
+    methods = ["Dyna-Bound", "DynaCol-RL", "DynaCol/DCBO"]
     labels_m = ["GNN", "Vector", "DCBO"]
     scenarios = ["Normal Load", "Burst Load", "Churn"]
     labels = ["Normal", "Burst", "Churn"]
@@ -319,7 +319,7 @@ def fig_baselines():
     series = {}
     colors = {}
     for label, method, color, src in [
-        ("GNN", "DynaCol-GNN", C_GNN, champ),
+        ("GNN", "Dyna-Bound", C_GNN, champ),
         ("Vector", "DynaCol-RL", C_VEC, champ),
         ("DCBO", "DynaCol/DCBO", C_DCBO, champ),
     ]:
@@ -335,7 +335,7 @@ def fig_baselines():
             short = short[:14]
         series[short] = pick_mean_std(brows, m, order)
         colors[short] = C_OTHER[i % len(C_OTHER)]
-    grouped_bars("fig10_baselines", "Multipipe N=100 — baselines vs DynaCol-GNN (5 trials)",
+    grouped_bars("fig10_baselines", "Multipipe N=100 — baselines vs Dyna-Bound (5 trials)",
                  series, labels, "SLA violation %", colors)
 
 
@@ -353,7 +353,7 @@ def fig_pareto():
     points = []
     for src, mapping in [
         (colony, {
-            "DynaCol-GNN": ("GNN", C_GNN),
+            "Dyna-Bound": ("GNN", C_GNN),
             "DynaCol-RL": ("Vector", C_VEC),
             "DynaCol/DCBO": ("DCBO", C_DCBO),
             "DRL-based": ("Tabular-DRL", C_DRL),
@@ -390,11 +390,11 @@ def fig_sensitivity():
     if not path.is_file():
         print("skip sensitivity fig")
         return
-    rows = [r for r in load(path) if r["method"] in ("DynaCol-GNN", "DynaCol-RL", "DynaCol/DCBO")]
+    rows = [r for r in load(path) if r["method"] in ("Dyna-Bound", "DynaCol-RL", "DynaCol/DCBO")]
     factors = ["blend", "deadline", "epsilon"]
     fig, axes = plt.subplots(1, 3, figsize=(9.5, 3.2), sharey=True)
-    method_color = {"DynaCol-GNN": C_GNN, "DynaCol-RL": C_VEC, "DynaCol/DCBO": C_DCBO}
-    method_label = {"DynaCol-GNN": "GNN", "DynaCol-RL": "Vector", "DynaCol/DCBO": "DCBO"}
+    method_color = {"Dyna-Bound": C_GNN, "DynaCol-RL": C_VEC, "DynaCol/DCBO": C_DCBO}
+    method_label = {"Dyna-Bound": "GNN", "DynaCol-RL": "Vector", "DynaCol/DCBO": "DCBO"}
     for ax, factor in zip(axes, factors):
         sub = [r for r in rows if r["factor"] == factor]
         values = sorted({r["value"] for r in sub}, key=lambda v: float(v))
@@ -433,19 +433,19 @@ def main() -> int:
     fig_sla_from_summary(
         RES / "medium_v2_summary.csv", "fig04_sla_surveillance",
         "Surveillance DAG — SLA at N=100 (± std)",
-        [("Hybrid", "DynaCol-GNN"), ("DCBO", "DynaCol/DCBO")],
+        [("Hybrid", "Dyna-Bound"), ("DCBO", "DynaCol/DCBO")],
     )
     fig_sla_from_summary(
         RES / "s23_ft5_summary.csv", "fig05_sla_champion",
         "Multipipe tuning lock — SLA at N=100 (± std, 5 trials)",
-        [("GNN", "DynaCol-GNN"), ("Vector", "DynaCol-RL"), ("DCBO", "DynaCol/DCBO")],
+        [("GNN", "Dyna-Bound"), ("Vector", "DynaCol-RL"), ("DCBO", "DynaCol/DCBO")],
     )
     journal = RES / "s23_ft20_summary.csv"
     journal_n = 20 if journal.is_file() else 10
     if not journal.is_file():
         journal = RES / "s23_ft10_summary.csv"
     journal_series = [
-        ("GNN", "DynaCol-GNN"), ("Vector", "DynaCol-RL"), ("DCBO", "DynaCol/DCBO"),
+        ("GNN", "Dyna-Bound"), ("Vector", "DynaCol-RL"), ("DCBO", "DynaCol/DCBO"),
     ]
     if journal.is_file():
         methods = {r["method"] for r in load(journal)}
@@ -465,7 +465,7 @@ def main() -> int:
         fig_sla_from_summary(
             RES / "s23_n1000_ft10_summary.csv", "fig09_sla_n1000",
             "Multipipe large-N parity — SLA at N=1000 (± std, 10 trials)",
-            [("GNN", "DynaCol-GNN"), ("Vector", "DynaCol-RL"), ("DCBO", "DynaCol/DCBO")],
+            [("GNN", "Dyna-Bound"), ("Vector", "DynaCol-RL"), ("DCBO", "DynaCol/DCBO")],
             n=1000,
         )
     else:

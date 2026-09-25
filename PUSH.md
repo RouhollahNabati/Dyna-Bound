@@ -1,21 +1,27 @@
-# Push to GitHub
+# Rename GitHub artifact: DynaCol-GNN → Dyna-Bound
 
-Local release tree is ready (commits on `main`). From this directory:
+Do **not** change [RouhollahNabati/DynaCol](https://github.com/RouhollahNabati/DynaCol).
+Only the JoS companion repo is renamed.
 
 ```bash
-cd /home/dispro/Projects/Dynacol/_publish/DynaCol-GNN-release
-
-# 1) Authenticate if needed
+# 1) Re-authenticate if gh token is expired
 gh auth login -h github.com
 
-# 2) Create public repo and push
-gh repo create RouhollahNabati/DynaCol-GNN --public \
-  --description "Colony-bounded hybrid learning for cold-start fog service placement (JoS artifact)" \
-  --source=. --remote=origin --push
+# 2) Rename the existing public artifact (keeps history; old URL redirects)
+gh repo rename Dyna-Bound --repo RouhollahNabati/DynaCol-GNN --yes
 
-# Or SSH push if the empty repo already exists:
-# git remote add origin git@github.com:RouhollahNabati/DynaCol-GNN.git
+# 3) Point this local release tree at the new name
+cd "/media/dispro/New Volume/Ph.D/Research/Dynacol/_publish/Dyna-Bound-release"
+git remote set-url origin git@github.com:RouhollahNabati/Dyna-Bound.git
+git remote -v
+
+# 4) Push updated README / latex after local edits
+git add -A
+git status
+# commit + push when ready:
+# git commit -m "Rebrand artifact to Dyna-Bound; keep DynaCol parent separate"
 # git push -u origin main
 ```
 
-Expected URL: https://github.com/RouhollahNabati/DynaCol-GNN
+Expected URL: https://github.com/RouhollahNabati/Dyna-Bound  
+Parent (unchanged): https://github.com/RouhollahNabati/DynaCol

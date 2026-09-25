@@ -1,4 +1,4 @@
-# Manuscript outline — DynaCol-GNN (JoS AI)
+# Manuscript outline — Dyna-Bound (JoS AI)
 
 Target: *The Journal of Supercomputing*, Artificial Intelligence section.
 Length aim: ~12–18 pages equivalent (Springer).

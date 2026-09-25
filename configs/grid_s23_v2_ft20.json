@@ -1,0 +1,19 @@
+{
+  "name": "s23_v2_ft20",
+  "description": "JoS journal lock candidate: GNN-v2 structure adj + s23_v2 weights; multipipe N=100 × 20",
+  "nodes": [100],
+  "scenarios": ["normal", "burst", "churn"],
+  "policies": ["colony_gnn", "colony_rl", "dcbo", "drl"],
+  "trials": 20,
+  "seed_base": 42,
+  "out_subdir": "simulator_gnn_lock_s23_v2_ft20",
+  "java_props": {
+    "dynacolgnn.appVariant": "multipipe",
+    "dynacolgnn.learnBlend": "0.60",
+    "dynacolgnn.slaDeadlineScale": "10.0",
+    "dynacolgnn.epsilon": "0.02",
+    "dynacolgnn.structureAdj": "true",
+    "dynacolgnn.gnnFineTune": "true",
+    "dynacolgnn.gnnWeights": "/media/dispro/New Volume/Ph.D/Research/Dynacol/dyna-bound/offline/data/gnn_weights_s23_v2.json"
+  }
+}

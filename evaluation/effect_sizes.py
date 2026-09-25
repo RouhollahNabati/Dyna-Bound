@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Paired bootstrap CIs and Cohen's d for DynaCol-GNN journal grids.
+"""Paired bootstrap CIs and Cohen's d for Dyna-Bound journal grids.
 
 Writes one CSV row per (nodes, scenario, comparison) with mean difference,
 bootstrap 95% CI, paired Cohen's d, and Holm-adjusted p from the same paired t

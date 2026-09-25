@@ -1,4 +1,4 @@
-# Formal MDP and architecture (DynaCol-GNN)
+# Formal MDP and architecture (Dyna-Bound)
 
 ## MDP
 

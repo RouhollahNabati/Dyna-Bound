@@ -1,6 +1,6 @@
 # Configs
 
-Experiment grids and feature flags for DynaCol-GNN only.
+Experiment grids and feature flags for Dyna-Bound only.
 
 Suggested files (to add when implementation starts):
 
@@ -10,7 +10,7 @@ Suggested files (to add when implementation starts):
 | `ablation_a2.json` | CRT/GRT/graph ablations |
 | `train_a2.yaml` | learner hyperparameters (lr, γ, K, GNN depth) |
 
-Keep paths pointing at `dynacol-gnn/evaluation/results/`, never at
+Keep paths pointing at `dyna-bound/evaluation/results/`, never at
 `../../evaluation/results/`.
 
 ## Files

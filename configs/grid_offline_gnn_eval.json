@@ -21,6 +21,6 @@
     "dynacolgnn.appVariant": "multipipe",
     "dynacolgnn.learnBlend": "0.60",
     "dynacolgnn.slaDeadlineScale": "10.0",
-    "dynacolgnn.gnnWeights": "/home/dispro/Projects/Dynacol/dynacol-gnn/offline/data/gnn_weights.json"
+    "dynacolgnn.gnnWeights": "/home/dispro/Projects/Dynacol/dyna-bound/offline/data/gnn_weights.json"
   }
 }

@@ -79,6 +79,7 @@ public final class TrajectoryLogger {
                 long t = step.getAndIncrement();
                 StringBuilder sb = new StringBuilder(512);
                 sb.append("{\"t\":").append(t);
+                sb.append(",\"schema\":2");
                 sb.append(",\"module\":\"").append(escape(module)).append('"');
                 sb.append(",\"n\":").append(x.length);
                 sb.append(",\"action\":").append(action);

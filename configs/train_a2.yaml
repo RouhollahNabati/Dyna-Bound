@@ -8,6 +8,6 @@ clip: 0.2
 export_format: json_weights  # OnlineColonyGnn loadWeights
 
 # Flow:
-# 1) python3 dynacol-gnn/offline/collect_traj.py
-# 2) python3 dynacol-gnn/offline/train_gin_ppo.py --traj ... --out ...
+# 1) python3 dyna-bound/offline/collect_traj.py
+# 2) python3 dyna-bound/offline/train_gin_ppo.py --traj ... --out ...
 # 3) run grid with -Ddynacolgnn.gnnWeights=<absolute path>

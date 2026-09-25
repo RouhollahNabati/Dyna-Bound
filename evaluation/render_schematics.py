@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render schematic Figs 1–2 for the DynaCol-GNN manuscript."""
+"""Render schematic Figs 1–2 for the Dyna-Bound manuscript."""
 
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ def fig1_architecture(path: Path) -> None:
     _box(ax, (0.8, 3.5), 2.6, 1.35, "L1 Sticky\nreuse current host\nif still feasible",
          fc="#D9E8D8", ec="#3F6B45")
     _box(ax, (4.3, 3.2), 3.5, 1.95,
-         "L2 DynaCol-GNN (this paper)\nCRT candidates ≤ K\n"
+         "L2 Dyna-Bound (this paper)\nCRT candidates ≤ K\n"
          "s = u_DCBO + β · f_θ(φ)\nscale-aware β → DCBO @ large N",
          fc="#D6E4F5", ec="#2F4A6E", fontsize=8.5)
     _box(ax, (8.6, 3.5), 2.6, 1.35, "L3 Cloud\nfallback when\nCRT/GRT fail",

@@ -20,7 +20,7 @@ pruned CRT (and optional GRT), hybridized with DCBO and scale-aware fallback.
 2. Hybrid stack: L1 deterministic → L2 online learner → L3 cloud
 3. Scale-aware blend (exact DCBO delegation at large fog counts)
 4. Encoder ablations: flat vector (A1) vs local graph (A2)
-5. Separate evaluation artifacts under `dynacol-gnn/evaluation/`
+5. Separate evaluation artifacts under `dyna-bound/evaluation/`
 
 ## Hypotheses (evidence-aligned)
 
@@ -52,4 +52,4 @@ Lead with **bounded-view hybrid learning under cold-start**, not “yet another 
 - [x] Online-on-FCM linear head (phase-1); offline PPO/GIN deferred
 - [x] **Primary story:** hybrid colony-bounded learning vs DCBO
 - [x] **A1 / A2:** encoder ablations (A1 slightly stronger on multipipe)
-- [x] Folder name `dynacol-gnn/` kept for history; prose uses DynaCol-Hybrid
+- [x] Folder name `dyna-bound/` kept for history; prose uses DynaCol-Hybrid

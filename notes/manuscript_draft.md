@@ -4,12 +4,12 @@
 **Affiliation:** Department of Computer Engineering, Faculty of Engineering,
 Islamic Azad University, Sanandaj Branch, Sanandaj, Iran  
 
-**Working manuscript (DynaCol-GNN)**  
+**Working manuscript (Dyna-Bound)**  
 Target: *The Journal of Supercomputing*, Artificial Intelligence section  
 **Final LaTeX/PDF:** [`../latex/main.pdf`](../latex/main.pdf) (build: `../latex/build.sh`)  
 Status: JoS major-revision lock — journal \(N{=}100\times 20\) with DRL, Holm/CI/effect,
 sensitivity, Pareto; title retitled per [`revision_gate.md`](revision_gate.md).  
-Figures: `dynacol-gnn/evaluation/figures/fig0{1–13}_*.{png,pdf}` (300 dpi).  
+Figures: `dyna-bound/evaluation/figures/fig0{1–13}_*.{png,pdf}` (300 dpi).  
 BibTeX: [`refs.bib`](refs.bib). Captions: [`figure_captions.md`](figure_captions.md).
 
 ---
@@ -19,7 +19,7 @@ BibTeX: [`refs.bib`](refs.bib). Captions: [`figure_captions.md`](figure_captions
 Self-organizing fog colonies can bootstrap from a zero-colony state and keep
 control state bounded in colony and global resource tables (CRT/GRT), but most
 learning-based placement methods either assume a ready control plane or act
-over the full set of fog nodes. This paper presents **DynaCol-GNN**, a
+over the full set of fog nodes. This paper presents **Dyna-Bound**, a
 colony-bounded hybrid placer that reuses DynaCol’s cold-start formation,
 manager handover, and L1 sticky / L3 cloud stack, while replacing only the L2
 host choice with online GraphSAGE or flat-vector scoring hybridized with the
@@ -84,7 +84,7 @@ scale-aware blend that delegates exactly to DCBO when the fabric is large
    \(10\)-trial / Holm analysis, \(N{=}1000\) parity, and named baselines.
 
 The rest of the paper reviews related work (Section 2), summarizes the DynaCol
-background we reuse (Section 3), presents DynaCol-GNN (Section 4), describes
+background we reuse (Section 3), presents Dyna-Bound (Section 4), describes
 the experimental setup (Section 5), reports results (Section 6), discusses
 implications and limits (Section 7), and concludes (Section 8).
 
@@ -115,7 +115,7 @@ module placement [Hossam et al., 2024], and multi-tier containers
 [Dogani et al., 2024]. Resource-management and orchestration surveys note that
 many learners still act over large host sets and presume an organized fabric
 [Hong and Varghese, 2019; Costa et al., 2022; Pallewatta et al., 2023].
-DynaCol-GNN instead keeps actions inside top-\(K\) CRT/GRT candidates and
+Dyna-Bound instead keeps actions inside top-\(K\) CRT/GRT candidates and
 hybridizes with deterministic DCBO so cold-start behavior remains stable.
 
 ### 2.3 Self-organizing and hierarchical fog control
@@ -156,7 +156,7 @@ multipipe apps.
 | DRL placers (DQN/PPO) | Rarely | Rarely | Rarely | Sometimes |
 | GNN-RL placers | Rarely | Rarely | Rarely | Yes |
 | DynaCol / DCBO | Yes | Yes | N/A | No |
-| **DynaCol-GNN** | **Yes** | **Yes** | **Yes** | **Yes** |
+| **Dyna-Bound** | **Yes** | **Yes** | **Yes** | **Yes** |
 
 Simulation tooling follows iFogSim / iFogSim2
 [Gupta et al., 2017; Mahmud et al., 2022]; related platforms include
@@ -186,7 +186,7 @@ cross-colony search without a global host list.
   deterministic multi-term objective \(J\), optionally minus attractiveness.
 - **L3:** fall back to the cloud when colony search fails.
 
-DynaCol-GNN replaces only the L2 *host ranking* inside CRT/GRT top-\(K\)
+Dyna-Bound replaces only the L2 *host ranking* inside CRT/GRT top-\(K\)
 (Fig. 1).
 
 ---
@@ -248,7 +248,7 @@ Attractiveness decay/update mirrors DCBO.
 
 **Offline path.** Trajectories are logged during exploratory `colony_gnn`
 runs, trained outside the simulator (structure-weighted objectives), and
-exported as JSON tensors matching the Java GNN layout (`dynacol-gnn/offline/`).
+exported as JSON tensors matching the Java GNN layout (`dyna-bound/offline/`).
 
 ### 4.5 Complexity and algorithm
 
@@ -275,7 +275,7 @@ reconcile(r, fcm, current, maxDepth):
 [Gupta et al., 2017; Mahmud et al., 2022]. Policies: `dcbo`, `colony_rl`
 (Vector), `colony_gnn` (GNN); named baselines `static_dcbo`, `fogplan`,
 `greedy` (Edgeward omitted on multipipe: >25 min/trial). Artifacts live under
-`dynacol-gnn/evaluation/` (top-level `evaluation/` untouched).
+`dyna-bound/evaluation/` (top-level `evaluation/` untouched).
 
 **Topologies.** \(N\in\{100,300,500,1000\}\). Scenarios: normal, burst, churn.
 
@@ -328,7 +328,7 @@ Source: `s23_ft5_summary.csv`. Fig. 5; overhead Fig. 8.
 | 100 | Burst | **24.89** | 25.35 | 26.13 |
 | 100 | Churn | **22.31** | 22.43 | 23.21 |
 
-DynaCol-GNN reduces mean SLA versus **both** Vector and DCBO under all three
+Dyna-Bound reduces mean SLA versus **both** Vector and DCBO under all three
 loads at matched control overhead (~1768 normalized messages; ~7.6 colonies).
 
 ### 6.3 Encoder ablation context
@@ -441,7 +441,7 @@ from the multipipe baseline grid due to prohibitive per-trial runtime.
 
 ## 8. Conclusion
 
-DynaCol-GNN shows that a GraphSAGE hybrid for fog service placement can stay
+Dyna-Bound shows that a GraphSAGE hybrid for fog service placement can stay
 inside cold-start colony views: hybridize L2 with DCBO, restrict actions to
 CRT/GRT top-\(K\), and fall back to exact DCBO at large scale. On iFogSim2,
 this reduces SLA violations at \(N{=}100\) versus DCBO at matched overhead on

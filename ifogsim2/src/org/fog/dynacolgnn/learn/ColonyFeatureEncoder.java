@@ -16,7 +16,8 @@ import java.util.Set;
  * Builds per-candidate features.
  * <ul>
  *   <li>VECTOR (A1): local host features + service/DAG scalars (no message passing)</li>
- *   <li>GNN (A2): RTT-weighted CRT hops + service-graph message from placed producers</li>
+ *   <li>GNN (A2): structure-weighted CRT hops (RTT + coloc + producer pull)
+ *       + service-graph message from placed producers</li>
  * </ul>
  */
 public final class ColonyFeatureEncoder {
@@ -26,6 +27,10 @@ public final class ColonyFeatureEncoder {
     /** host_emb + service + bias */
     public static final int FEATURE_DIM = HOST_DIM + SERVICE_DIM + 1;
     public static final int GNN_HOPS = 2;
+    /** Pairwise coloc co-support added to CRT edges (GNN-v2). */
+    private static final double LAMBDA_COLOC_PAIR = 0.35;
+    /** Pull message mass toward producer-aligned (high-coloc) hosts. */
+    private static final double LAMBDA_COLOC_TARGET = 0.50;
 
     private ColonyFeatureEncoder() {
     }
@@ -55,7 +60,7 @@ public final class ColonyFeatureEncoder {
 
         double[][] hostEmb;
         if (kind == EncoderKind.GNN && n > 1) {
-            double[][] weights = rttAffinityWeights(candidates, deviceIndex);
+            double[][] weights = structureAffinityWeights(candidates, deviceIndex, colocAffinity);
             hostEmb = weightedAggregateHops(hostRaw, weights, GNN_HOPS);
             for (int i = 0; i < n; i++) {
                 hostEmb[i][6] = neighborPressure(hostRaw, weights, i, 0);
@@ -233,26 +238,42 @@ public final class ColonyFeatureEncoder {
         return n == 0 ? 0.0 : sum / n;
     }
 
-    /** Higher weight for lower RTT between CRT members (local clique structure). */
-    private static double[][] rttAffinityWeights(List<ColonyResourceEntry> candidates,
-                                                Map<Integer, FogDevice> deviceIndex) {
-        int n = candidates.size();
+    /**
+     * Row-stochastic CRT affinity for GNN message passing.
+     * Base = RTT affinity; with structure on (default), add coloc co-support and
+     * pull toward producer-aligned hosts. Ablate with {@code -Ddynacolgnn.structureAdj=false}.
+     */
+    public static double[][] structureAffinityWeights(List<ColonyResourceEntry> candidates,
+                                                      Map<Integer, FogDevice> deviceIndex,
+                                                      double[] colocAffinity) {
+        int n = candidates == null ? 0 : candidates.size();
         double[][] w = new double[n][n];
+        if (n == 0) {
+            return w;
+        }
+        boolean structureOn = structureAdjEnabled();
         for (int i = 0; i < n; i++) {
             FogDevice di = deviceIndex != null ? deviceIndex.get(candidates.get(i).getFogDeviceId()) : null;
+            double colocI = colocAt(colocAffinity, i);
             double sum = 0.0;
             for (int j = 0; j < n; j++) {
                 if (i == j) {
                     w[i][j] = 1.0;
                 } else {
                     FogDevice dj = deviceIndex != null ? deviceIndex.get(candidates.get(j).getFogDeviceId()) : null;
-                    double rtt = 50.0;
+                    double rtt;
                     if (di != null && dj != null && deviceIndex != null) {
                         rtt = FogTopologyUtil.estimateRttMs(di, dj, deviceIndex);
                     } else {
                         rtt = Math.abs(candidates.get(i).getRttToFcmMs() - candidates.get(j).getRttToFcmMs()) + 1.0;
                     }
-                    w[i][j] = 1.0 / (1.0 + rtt / 20.0);
+                    double edge = 1.0 / (1.0 + rtt / 20.0);
+                    if (structureOn) {
+                        double colocJ = colocAt(colocAffinity, j);
+                        edge += LAMBDA_COLOC_PAIR * Math.min(colocI, colocJ);
+                        edge += LAMBDA_COLOC_TARGET * colocJ;
+                    }
+                    w[i][j] = edge;
                 }
                 sum += w[i][j];
             }
@@ -263,6 +284,22 @@ public final class ColonyFeatureEncoder {
             }
         }
         return w;
+    }
+
+    private static boolean structureAdjEnabled() {
+        String prop = System.getProperty("dynacolgnn.structureAdj", "true");
+        return prop == null || !"false".equalsIgnoreCase(prop.trim());
+    }
+
+    private static double colocAt(double[] coloc, int i) {
+        if (coloc == null || i < 0 || i >= coloc.length) {
+            return 0.0;
+        }
+        double v = coloc[i];
+        if (Double.isNaN(v) || Double.isInfinite(v)) {
+            return 0.0;
+        }
+        return Math.max(0.0, Math.min(1.0, v));
     }
 
     private static double[][] weightedAggregateHops(double[][] raw, double[][] weights, int hops) {

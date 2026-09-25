@@ -1,10 +1,10 @@
-# Figure captions — DynaCol-GNN (JoS)
+# Figure captions — Dyna-Bound (JoS)
 
-Files under `dynacol-gnn/evaluation/figures/` (PNG 300 dpi + PDF).
+Files under `dyna-bound/evaluation/figures/` (PNG 300 dpi + PDF).
 
 **Fig. 1.** `fig01_architecture` — Colony-bounded hybrid placement stack: reused
 DynaCol control plane (cold start, FCM, CRT/GRT) with L1 sticky → L2
-DynaCol-GNN → L3 cloud.
+Dyna-Bound → L3 cloud.
 
 **Fig. 2.** `fig02_encoders` — Vector ablation versus GraphSAGE encoder
 pipelines feeding the same hybrid score \(s(i)=u_{\mathrm{DCBO}}+\beta\cdot
@@ -32,7 +32,7 @@ trials) at \(N{=}100\), including tabular DRL when present.
 (10 trials).
 
 **Fig. 10.** `fig10_baselines` — Named baselines (FogPlan, Greedy-Nearest,
-Static-DCBO) vs DynaCol-GNN / Vector / DCBO on multipipe \(N{=}100\) (5 trials).
+Static-DCBO) vs Dyna-Bound / Vector / DCBO on multipipe \(N{=}100\) (5 trials).
 Edgeward omitted due to prohibitive multipipe runtime.
 
 **Fig. 11.** `fig11_holm` — Holm-adjusted pairwise \(p\)-values for SLA at

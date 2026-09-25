@@ -24,8 +24,9 @@ table remains. Claims distinguish encoder structure from the offline+fine-tune
 pipeline.
 
 ### M3 — Incremental novelty / opaque DynaCol prior
-**Action.** Added BibTeX `@unpublished{nabati_dynacol_cluster2026}` (Cluster
-Computing, under review) and **Appendix** reprinting cold-start, handover, and
+**Action.** Added BibTeX `@misc{nabati_dynacol_cluster2026}` (unpublished
+DynaCol control-plane manuscript; Cluster Computing is **not** a venue) and
+**Appendix** reprinting cold-start, handover, and
 DCBO L1–L3 algorithms for self-containment without re-claiming them.
 
 ### M4 — Same-plane learning baseline

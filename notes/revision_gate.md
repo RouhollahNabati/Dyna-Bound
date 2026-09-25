@@ -31,7 +31,7 @@ everywhere.
 
 **Title decision: RETITLE** to
 **“Colony-Bounded Hybrid Learning for Cold-Start Fog Service Placement”**.
-Keep GraphSAGE as the named encoder / method brand **DynaCol-GNN** in the body;
+Keep GraphSAGE as the named encoder / method brand **Dyna-Bound** in the body;
 do **not** claim a universal GNN≻Vector gap.
 
 ## 3. Tabular DRL (same-plane)

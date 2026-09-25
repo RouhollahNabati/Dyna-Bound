@@ -6,5 +6,5 @@
   "policies": ["colony_gnn", "colony_rl", "dcbo"],
   "trials": 3,
   "seed_base": 42,
-  "results_dir": "dynacol-gnn/evaluation/results"
+  "results_dir": "dyna-bound/evaluation/results"
 }

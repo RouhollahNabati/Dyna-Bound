@@ -1,10 +1,10 @@
-# Evaluation (DynaCol-GNN only)
+# Evaluation (Dyna-Bound only)
 
 All A2/A1 trial CSVs, summaries, figures, and LaTeX fragments for this line
 belong here:
 
 ```
-dynacol-gnn/evaluation/
+dyna-bound/evaluation/
 ├── results/          # trials + locked summary CSVs
 ├── figures/          # rendered bars/scalability from summaries
 ├── render_figures.py # matplotlib renderer (use offline/.venv)
@@ -16,7 +16,7 @@ dynacol-gnn/evaluation/
 
 | Allowed | Forbidden |
 |---------|-----------|
-| Write under `dynacol-gnn/evaluation/` | Overwrite `../../evaluation/results/` |
+| Write under `dyna-bound/evaluation/` | Overwrite `../../evaluation/results/` |
 | Read main baselines for comparison | Regenerate main-paper LaTeX from A2 runs |
 | Call `ifogsim2` binaries / classes | Fork a second full `ifogsim2` tree |
 

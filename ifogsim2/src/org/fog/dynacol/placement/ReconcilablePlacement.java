@@ -6,7 +6,7 @@ import org.fog.dynacol.model.ServiceRequest;
 import java.util.Optional;
 
 /**
- * Placement strategies that support hierarchical L1/L2/L3 reconcile (DCBO and DynaCol-GNN).
+ * Placement strategies that support hierarchical L1/L2/L3 reconcile (DCBO and Dyna-Bound).
  */
 public interface ReconcilablePlacement extends PlacementStrategy {
 

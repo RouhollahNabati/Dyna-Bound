@@ -20,7 +20,9 @@ import org.fog.dynacol.table.GlobalResourceTable;
 import org.fog.dynacol.util.FogTopologyUtil;
 import org.fog.dynacolgnn.graph.ServiceDagFeatures;
 import org.fog.dynacolgnn.learn.ColonyFeatureEncoder;
+import org.fog.dynacolgnn.learn.OnlineColonyDqn;
 import org.fog.dynacolgnn.learn.OnlineColonyGnn;
+import org.fog.dynacolgnn.learn.OnlineColonyPpo;
 import org.fog.dynacolgnn.learn.OnlineLinearPolicy;
 import org.fog.dynacolgnn.learn.TrajectoryLogger;
 import org.fog.entities.FogDevice;
@@ -68,12 +70,16 @@ public final class ColonyBoundedPlacement implements ReconcilablePlacement {
     private final EncoderKind encoderKind;
     private final OnlineLinearPolicy vectorPolicy;
     private final OnlineColonyGnn gnnPolicy;
+    private final OnlineColonyDqn dqnPolicy;
+    private final OnlineColonyPpo ppoPolicy;
     private final ResourceVector maxResources;
     private final Map<String, Integer> moduleHosts = new HashMap<>();
     private final int fogNodeCount;
 
     private Application application;
     private ServiceDagFeatures dagFeatures = ServiceDagFeatures.from(null);
+    /** FCM id from last reconcile; used for CRT-ablate RTT estimates. */
+    private Integer lastFcmDeviceId;
 
     public ColonyBoundedPlacement(Map<Integer, FogNodeState> nodeStates,
                                   List<FogDevice> allDevices,
@@ -109,11 +115,27 @@ public final class ColonyBoundedPlacement implements ReconcilablePlacement {
         if (this.encoderKind == EncoderKind.GNN) {
             this.gnnPolicy = new OnlineColonyGnn(GNN_LEARNING_RATE, epsilon, random);
             this.vectorPolicy = null;
+            this.dqnPolicy = null;
+            this.ppoPolicy = null;
             TrajectoryLogger.getInstance().ensureOpen();
+        } else if (this.encoderKind == EncoderKind.DQN) {
+            this.dqnPolicy = new OnlineColonyDqn(
+                    ColonyFeatureEncoder.FEATURE_DIM, LEARNING_RATE, Math.max(epsilon, 0.05), random);
+            this.vectorPolicy = null;
+            this.gnnPolicy = null;
+            this.ppoPolicy = null;
+        } else if (this.encoderKind == EncoderKind.PPO) {
+            this.ppoPolicy = new OnlineColonyPpo(
+                    ColonyFeatureEncoder.FEATURE_DIM, LEARNING_RATE, Math.max(epsilon, 0.05), random);
+            this.vectorPolicy = null;
+            this.gnnPolicy = null;
+            this.dqnPolicy = null;
         } else {
             this.vectorPolicy = new OnlineLinearPolicy(
                     ColonyFeatureEncoder.FEATURE_DIM, LEARNING_RATE, epsilon, random);
             this.gnnPolicy = null;
+            this.dqnPolicy = null;
+            this.ppoPolicy = null;
         }
         this.maxResources = FogTopologyUtil.maxResources(allDevices);
     }
@@ -153,8 +175,12 @@ public final class ColonyBoundedPlacement implements ReconcilablePlacement {
         if (localFcmState == null) {
             return Optional.empty();
         }
+        lastFcmDeviceId = localFcmState.getFcmDeviceId() != null
+                ? localFcmState.getFcmDeviceId()
+                : localFcmState.getFogDeviceId();
         // Exact DCBO parity when learner is disabled by blend (large-N default).
-        if (resolveLearnBlend() <= 1e-12) {
+        // Pure CRT learners (DQN/PPO) keep ranking even when blend is zero.
+        if (resolveLearnBlend() <= 1e-12 && !encoderKind.isPureLearnerBaseline()) {
             return dcboDelegate.reconcileService(request, localFcmState, currentHostId, maxDepth);
         }
 
@@ -231,14 +257,15 @@ public final class ColonyBoundedPlacement implements ReconcilablePlacement {
             return Optional.empty();
         }
         double[] coloc = colocAffinity(request.getModuleName(), feasible);
-        // A1 ablation: no service-graph co-location channel (flat host+service only).
-        if (encoderKind != EncoderKind.GNN) {
+        // Flat-feature learners: no service-graph co-location channel.
+        EncoderKind featureKind = encoderKind.usesFlatFeatures() ? EncoderKind.VECTOR : encoderKind;
+        if (featureKind != EncoderKind.GNN) {
             coloc = new double[feasible.size()];
         }
         double[][] features = ColonyFeatureEncoder.encodeCandidates(
-                encoderKind, request, feasible, dagFeatures, maxResources, deviceIndex, coloc, moduleHosts);
+                featureKind, request, feasible, dagFeatures, maxResources, deviceIndex, coloc, moduleHosts);
         double[] base = buildBaseUtilities(request, feasible, features, coloc);
-        int idx = selectIndex(feasible, features, base);
+        int idx = selectIndex(feasible, features, base, coloc);
         if (idx < 0 || idx >= feasible.size()) {
             return Optional.empty();
         }
@@ -248,7 +275,7 @@ public final class ColonyBoundedPlacement implements ReconcilablePlacement {
         if (encoderKind == EncoderKind.GNN) {
             signal = shapeLearningReward(request, feasible, idx, features, coloc);
         } else {
-            // Vector ablation: classical 1-step relative attractiveness only.
+            // Vector / DQN / PPO: classical 1-step relative attractiveness only.
             double reward = attractivenessModel.reward(
                     request, deviceIndex.get(chosen.getFogDeviceId()), deviceIndex);
             double dcboReward = attractivenessModel.reward(
@@ -271,6 +298,10 @@ public final class ColonyBoundedPlacement implements ReconcilablePlacement {
                         signal.shaped,
                         request.getModuleName());
             }
+        } else if (dqnPolicy != null) {
+            dqnPolicy.update(signal.shaped);
+        } else if (ppoPolicy != null) {
+            ppoPolicy.update(signal.shaped);
         } else if (vectorPolicy != null) {
             vectorPolicy.update(features[idx], signal.shaped);
         }
@@ -353,6 +384,9 @@ public final class ColonyBoundedPlacement implements ReconcilablePlacement {
     }
 
     private List<ColonyResourceEntry> feasibleTopK(ServiceRequest request, ColonyResourceTable crt) {
+        if (crtAblateEnabled()) {
+            return feasibleGlobalTopK(request, crt, resolveCrtAblateK());
+        }
         List<ColonyResourceEntry> feasible = new ArrayList<>();
         if (crt == null) {
             return feasible;
@@ -368,6 +402,69 @@ public final class ColonyBoundedPlacement implements ReconcilablePlacement {
             return new ArrayList<>(feasible.subList(0, DynaColConfig.TOP_K_CRT_CANDIDATES));
         }
         return feasible;
+    }
+
+    /**
+     * CRT ablation: action set over top-{@code limit} fog hosts globally
+     * (≫ CRT top-K), so colony-bounded view is no longer hard-limited.
+     */
+    private List<ColonyResourceEntry> feasibleGlobalTopK(ServiceRequest request,
+                                                         ColonyResourceTable crt,
+                                                         int limit) {
+        List<ColonyResourceEntry> feasible = new ArrayList<>();
+        FogDevice fcm = lastFcmDeviceId != null ? deviceIndex.get(lastFcmDeviceId) : null;
+        for (FogDevice device : allDevices) {
+            if (PlacementCandidateUtil.requiresFogHost(request)
+                    && !PlacementCandidateUtil.isFogHost(device)) {
+                continue;
+            }
+            if (PlacementCandidateUtil.isCloud(device) || PlacementCandidateUtil.isEdgeCamera(device)) {
+                continue;
+            }
+            ColonyResourceEntry crtHit = crt != null ? crt.get(device.getId()) : null;
+            ResourceVector avail = crtHit != null
+                    ? crtHit.getAvailable()
+                    : ResourceVector.availableFromFogDevice(device);
+            if (avail == null || !avail.canFit(request.getDemand())) {
+                continue;
+            }
+            double rtt;
+            if (crtHit != null) {
+                rtt = crtHit.getRttToFcmMs();
+            } else if (fcm != null) {
+                rtt = FogTopologyUtil.estimateRttMs(fcm, device, deviceIndex);
+            } else {
+                rtt = 50.0;
+            }
+            ColonyResourceEntry entry = new ColonyResourceEntry(device.getId(), avail, rtt);
+            if (crtHit != null) {
+                entry.setAttractiveness(crtHit.getAttractiveness());
+            }
+            feasible.add(entry);
+        }
+        feasible.sort(Comparator.comparingDouble(e -> scoreEntry(request, e)));
+        int k = Math.max(1, limit);
+        if (feasible.size() > k) {
+            return new ArrayList<>(feasible.subList(0, k));
+        }
+        return feasible;
+    }
+
+    private static boolean crtAblateEnabled() {
+        String prop = System.getProperty("dynacolgnn.crtAblate", "false");
+        return prop != null && "true".equalsIgnoreCase(prop.trim());
+    }
+
+    private static int resolveCrtAblateK() {
+        String prop = System.getProperty("dynacolgnn.crtAblateK", "50");
+        if (prop == null || prop.isBlank()) {
+            return 50;
+        }
+        try {
+            return Math.max(DynaColConfig.TOP_K_CRT_CANDIDATES, Integer.parseInt(prop.trim()));
+        } catch (NumberFormatException e) {
+            return 50;
+        }
     }
 
     private double scoreEntry(ServiceRequest request, ColonyResourceEntry entry) {
@@ -429,10 +526,17 @@ public final class ColonyBoundedPlacement implements ReconcilablePlacement {
 
     private int selectIndex(List<ColonyResourceEntry> feasible,
                             double[][] features,
-                            double[] base) {
+                            double[] base,
+                            double[] coloc) {
+        if (dqnPolicy != null) {
+            return dqnPolicy.selectIndex(features);
+        }
+        if (ppoPolicy != null) {
+            return ppoPolicy.selectIndex(features);
+        }
         double blend = resolveLearnBlend();
         if (gnnPolicy != null) {
-            return gnnPolicy.selectHybridIndex(feasible, deviceIndex, features, base, blend);
+            return gnnPolicy.selectHybridIndex(feasible, deviceIndex, features, base, blend, coloc);
         }
         return vectorPolicy.selectHybridIndex(features, base, blend);
     }

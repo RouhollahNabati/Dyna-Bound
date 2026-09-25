@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Paired SLA tests with Holm–Bonferroni correction for DynaCol-GNN grids.
+"""Paired SLA tests with Holm–Bonferroni correction for Dyna-Bound grids.
 
-Compares DynaCol-GNN and DynaCol-RL against DynaCol/DCBO (and GNN vs Vector)
+Compares Dyna-Bound and DynaCol-RL against DynaCol/DCBO (and GNN vs Vector)
 per (nodes, scenario) using paired Student t on matched trial seeds.
 """
 
@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent
 DEFAULT_SIM = ROOT / "results" / "simulator_gnn_lock_s23_ft5"
 DEFAULT_OUT = ROOT / "results" / "holm_s23_ft5.csv"
 
-METHOD_GNN = "DynaCol-GNN"
+METHOD_GNN = "Dyna-Bound"
 METHOD_VEC = "DynaCol-RL"
 METHOD_DCBO = "DynaCol/DCBO"
 METHOD_DRL = "DRL-based"

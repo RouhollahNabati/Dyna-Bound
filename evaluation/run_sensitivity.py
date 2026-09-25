@@ -17,10 +17,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 EVAL = Path(__file__).resolve().parent
-CFG = ROOT / "dynacol-gnn" / "configs"
+CFG = ROOT / "dyna-bound" / "configs"
 RES = EVAL / "results"
 
-WEIGHTS = str(ROOT / "dynacol-gnn" / "offline" / "data" / "gnn_weights_s23.json")
+WEIGHTS = str(ROOT / "dyna-bound" / "offline" / "data" / "gnn_weights_s23.json")
 
 BASE_PROPS = {
     "dynacolgnn.appVariant": "multipipe",

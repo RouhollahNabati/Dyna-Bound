@@ -1,4 +1,4 @@
-# Build DynaCol-GNN Springer sn-jnl PDF (iicol two-column).
+# Build Dyna-Bound Springer sn-jnl PDF (iicol two-column).
 # Article-class backup: bash build.sh article  → main_article.pdf
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"

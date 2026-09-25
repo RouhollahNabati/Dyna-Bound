@@ -1,4 +1,4 @@
-# Related Work — DynaCol-GNN
+# Related Work — Dyna-Bound
 
 Venue: *The Journal of Supercomputing*, Artificial Intelligence section.
 BibTeX: [`refs.bib`](refs.bib) (~29 entries).
@@ -32,7 +32,7 @@ learners still act over large host sets and presume an organized fabric
 [Hong and Varghese, 2019]. Orchestration surveys similarly separate control
 planes from learning plugins [Costa et al., 2022; Pallewatta et al., 2023].
 
-**Positioning:** DynaCol-GNN keeps actions inside top-\(K\) CRT/GRT candidates
+**Positioning:** Dyna-Bound keeps actions inside top-\(K\) CRT/GRT candidates
 and hybridizes with deterministic DCBO so cold start remains stable. Learning
 is the L2 plug-in, not a replacement for formation/handover.
 
@@ -81,4 +81,4 @@ blend, (iii) multipipe stress + named baselines + journal-scale grids.
 | DRL placers (DQN/PPO) | Rarely | Rarely | Rarely | Sometimes |
 | GNN-RL placers | Rarely | Rarely | Rarely | Yes |
 | DynaCol / DCBO | Yes | Yes (CRT/GRT) | N/A | No |
-| **DynaCol-GNN** | **Yes (reused)** | **Yes (≤K CRT)** | **Yes (DCBO blend)** | **Yes (GraphSAGE)** |
+| **Dyna-Bound** | **Yes (reused)** | **Yes (≤K CRT)** | **Yes (DCBO blend)** | **Yes (GraphSAGE)** |

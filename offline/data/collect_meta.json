@@ -1,5 +1,5 @@
 {
-  "traj": "/home/dispro/Projects/Dynacol/dynacol-gnn/offline/data/traj_multipipe.jsonl",
+  "traj": "/home/dispro/Projects/Dynacol/dyna-bound/offline/data/traj_multipipe.jsonl",
   "decisions": 4139,
   "runs": 12,
   "nodes": 100

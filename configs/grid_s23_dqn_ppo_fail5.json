@@ -1,0 +1,19 @@
+{
+  "name": "s23_dqn_ppo_fail5",
+  "description": "CRT-bounded DQN/PPO baselines + node failure 5/10/20% (N=100, 5 trials)",
+  "nodes": [100],
+  "scenarios": ["normal", "burst", "churn", "node_fail05", "node_fail10", "node_fail20"],
+  "policies": ["colony_gnn", "colony_rl", "dcbo", "drl", "colony_dqn", "colony_ppo"],
+  "trials": 5,
+  "seed_base": 42,
+  "out_subdir": "simulator_dqn_ppo_fail5",
+  "java_props": {
+    "dynacolgnn.appVariant": "multipipe",
+    "dynacolgnn.learnBlend": "0.60",
+    "dynacolgnn.slaDeadlineScale": "10.0",
+    "dynacolgnn.epsilon": "0.05",
+    "dynacolgnn.structureAdj": "true",
+    "dynacolgnn.gnnFineTune": "true",
+    "dynacolgnn.gnnWeights": "/media/dispro/New Volume/Ph.D/Research/Dynacol/dyna-bound/offline/data/gnn_weights_s23_v2.json"
+  }
+}

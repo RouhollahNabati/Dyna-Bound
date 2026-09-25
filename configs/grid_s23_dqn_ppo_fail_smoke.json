@@ -1,0 +1,17 @@
+{
+  "name": "s23_dqn_ppo_fail_smoke",
+  "description": "Smoke: CRT-bounded DQN/PPO + node failure scenarios (N=100, 2 trials)",
+  "nodes": [100],
+  "scenarios": ["normal", "burst", "node_fail10"],
+  "policies": ["colony_gnn", "colony_rl", "dcbo", "colony_dqn", "colony_ppo"],
+  "trials": 2,
+  "seed_base": 42,
+  "out_subdir": "simulator_dqn_ppo_fail_smoke",
+  "java_props": {
+    "dynacolgnn.appVariant": "multipipe",
+    "dynacolgnn.learnBlend": "0.60",
+    "dynacolgnn.slaDeadlineScale": "10.0",
+    "dynacolgnn.epsilon": "0.05",
+    "dynacolgnn.structureAdj": "true"
+  }
+}

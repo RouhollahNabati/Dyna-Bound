@@ -7,5 +7,5 @@
   "trials": 5,
   "seed_base": 42,
   "out_subdir": "simulator_n500_calib",
-  "results_dir": "dynacol-gnn/evaluation/results"
+  "results_dir": "dyna-bound/evaluation/results"
 }

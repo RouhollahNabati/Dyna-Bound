@@ -1,4 +1,4 @@
-# LaTeX draft — DynaCol-GNN (Journal of Supercomputing)
+# LaTeX draft — Dyna-Bound (Journal of Supercomputing)
 
 ## Files
 
@@ -6,7 +6,7 @@
 |------|------|
 | `main.tex` | Manuscript on Springer Nature `sn-jnl` (two-column `iicol`) |
 | `main_article.tex` | Portable `article`-class backup |
-| `sn-jnl.cls` | Compatibility wrapper (same as Cluster Computing submission) |
+| `sn-jnl.cls` | Compatibility wrapper (Springer Nature `sn-jnl`) |
 | `sn-mathphys-num.bst` | Numbered Springer math/phys bibliography style |
 | `refs.bib` | Bibliography |
 | `figures/` | Symlinks to `../evaluation/figures/fig01`–`fig13` PDFs |
@@ -15,7 +15,7 @@
 ## Build
 
 ```bash
-cd dynacol-gnn/latex
+cd dyna-bound/latex
 bash build.sh          # → main.pdf (sn-jnl, two-column)
 bash build.sh article  # → main_article.pdf (single-column article)
 ```
